@@ -1,4 +1,4 @@
-# MVA Hackathon 2026 — Track 1
+# MVA Hackathon 2026 — local, resumable two-track workflow
 
 Reproducible, local-only prioritisation of candidate variants for the
 **Rare Disease, Real Kid: MVA Hackathon 2026**. The workflow starts from the
@@ -23,6 +23,27 @@ Audited code and documentation may be published in small, focused commits as
 work is ready. Intermediate commits do not establish scientific completion;
 private data and generated submission materials remain local. The quick start
 below documents the existing Track 1 interface.
+
+## Unified workflow
+
+```bash
+# Inspect prerequisites and the approved storage allowance.
+./mva preflight
+
+# Start/resume the persistent local pipeline for both tracks.
+./mva run --tracks both --resume
+
+# Technical state only: no patient-level evidence is printed.
+./mva status --json
+
+# Graceful stop; retain checkpoints and source data.
+./mva stop
+```
+
+See [architecture](docs/01_architecture.md), [operations and recovery](docs/02_operations.md),
+and [submission materials](docs/03_submission.md). The execution plan records
+which real analyses and acceptance checks are still outstanding; passing tests
+or publishing this code does not establish project completion.
 
 ## Safety boundaries
 

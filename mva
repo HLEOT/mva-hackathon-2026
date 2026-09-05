@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# One environment and cache boundary for both scientific tracks.
+set -euo pipefail
+umask 077
+MVA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${MVA_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+export PATH="${MVA_ROOT}/.tools/bin:${MVA_ROOT}/.conda/launcher/bin:${PATH}"
+export HF_HOME="${MVA_ROOT}/data/gated/huggingface-cache"
+export HF_HUB_CACHE="${HF_HOME}/hub"
+export HF_XET_CACHE="${HF_HOME}/xet"
+export HF_XET_CHUNK_CACHE_SIZE_BYTES=0
+export CONDA_PKGS_DIRS="${MVA_ROOT}/.conda/pkgs"
+export PIP_CACHE_DIR="${MVA_ROOT}/.tools/pip-cache"
+export XDG_CACHE_HOME="${MVA_ROOT}/.tools/cache"
+export TMPDIR="${MVA_ROOT}/work/private/tmp"
+mkdir -p "${TMPDIR}"
+chmod 700 "${MVA_ROOT}/work/private" "${TMPDIR}"
+if [[ -z "${HF_TOKEN:-}" && -r "${MVA_ROOT}/config/hf_token.local.txt" ]]; then
+    IFS= read -r HF_TOKEN < "${MVA_ROOT}/config/hf_token.local.txt" || true
+    export HF_TOKEN
+fi
+cd "${MVA_ROOT}"
+if [[ ! -x .conda/launcher/bin/python ]]; then
+    echo 'Launcher environment missing; run ./mva-track1 bootstrap.' >&2
+    exit 2
+fi
+exec .conda/launcher/bin/python -m mva_runner.cli "$@"

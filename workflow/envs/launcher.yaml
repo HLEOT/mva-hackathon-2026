@@ -1,0 +1,16 @@
+name: mva-track1-launcher
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - snakemake-minimal=9.6
+  - huggingface_hub=0.34
+  - pytest=8.4
+  - reportlab=4.4
+  # Every Python stage accepts safe YAML and legacy JSON configuration.
+  - pyyaml=6.0
+  - psutil=7
+  - jsonschema=4.25
+  - requests=2.32
+  - openpyxl=3.1

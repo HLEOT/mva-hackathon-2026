@@ -1,0 +1,8 @@
+name: mva-delivery
+channels:
+  - conda-forge
+dependencies:
+  # Audio/video are generated entirely locally. No hosted speech service.
+  - ffmpeg=8
+  # Speech uses the separately verified project-local espeak-ng executable.
+  # Record its host libraries in the delivery provenance manifest.

@@ -423,6 +423,10 @@ status report. Revalidate them before choosing the next stage.
 - Planning baseline: public-resource dry run required no jobs; missing
   installation provenance metadata was noted above.
 - Implementation verification: 137 synthetic tests passed on 2026-09-05.
+- Implementation verification: 187 synthetic tests passed after ordered-rule,
+  live-process recovery, publication-race, HGVS/functional-evidence and shorter
+  PDF re-render tests. The real prioritisation dry run parses all 26 rules and
+  schedules source-invalidated outputs; no rerun triggers were suppressed.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -441,6 +445,13 @@ status report. Revalidate them before choosing the next stage.
 - Documentation handoff check, 2026-09-05: the intended public GitHub repository
   exists and the connected account has push access. The remote had no branch
   heads when checked before the first documentation upload.
+- Documentation published and bytes verified in commits `378ebef` and `ea573c5`;
+  the original 45-entry staged index was preserved. This is not a full code
+  release or scientific-completion claim.
+- Live execution check at 17:27 UTC: the read-download supervisor and child
+  were verified alive; additional storage was 48.59 GB of the 250 GB allowance.
+  The earlier prioritisation/finalist run completed, but scientific source
+  changes now require downstream revalidation before final delivery.
 
 ### Blockers and prerequisites
 

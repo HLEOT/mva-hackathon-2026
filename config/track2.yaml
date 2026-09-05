@@ -1,0 +1,30 @@
+# Public research scope is fixed before opening any patient-derived results.
+# Seed compounds are a search space, not recommended treatments. Selection
+# requires sourced mechanism, regulatory status and a falsifiable experiment.
+schema_version: 1
+public_genes: [BUB1B, CEP57, TRIP13, CENATAC, SLF2, SMC5, MAD1L1]
+drug_search_space: [sirolimus, everolimus, metformin, acetylcysteine, pravastatin]
+# Stable IDs verified against the public Content Service. The graph is evidence
+# of checkpoint biology, not proof that a nearby compound repairs a variant.
+reactome_seeds: [R-HSA-69620, R-HSA-69618, R-HSA-141409]
+literature_queries:
+  mva_biology: '"mosaic variegated aneuploidy"'
+  chromosome_segregation: '(BUB1B OR CEP57 OR TRIP13 OR CENATAC OR SLF2 OR SMC5 OR MAD1L1) AND aneuploidy'
+  aneuploidy_interventions: 'aneuploidy AND (sirolimus OR rapamycin OR everolimus OR metformin OR acetylcysteine OR pravastatin)'
+  checkpoint_rescue: '(BUBR1 OR BUB1B OR "spindle assembly checkpoint") AND (rescue OR restoration OR treatment)'
+  opposing_effects: '(rapamycin OR metformin OR acetylcysteine) AND (aneuploidy OR "chromosome instability") AND (toxicity OR impairment OR cancer)'
+sources:
+  chembl: https://www.ebi.ac.uk/chembl/api/data
+  reactome: https://reactome.org/ContentService
+  entrez: https://eutils.ncbi.nlm.nih.gov/entrez/eutils
+  fda: https://api.fda.gov
+policy:
+  maximum_hypotheses: 5
+  approval_jurisdiction: United States FDA
+  require_primary_literature: true
+  require_regulatory_record: true
+  require_safety_record: true
+  permit_unsupported_candidates: false
+  # Query limits are disclosed as coverage limitations, never exhaustiveness.
+  literature_results_per_query: 10
+  source_attempts: 3

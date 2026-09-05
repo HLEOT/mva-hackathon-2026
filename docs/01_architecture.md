@@ -1,0 +1,103 @@
+# Architecture and scientific boundaries
+
+<!-- Keep implementation details here; the execution plan owns live progress. -->
+
+The project combines a persistent local supervisor with a Snakemake scientific
+workflow. The hosted coding agent may inspect code, synthetic fixtures and
+sanitised status, but patient-level evidence is interpreted only by local code
+and authenticated loopback inference.
+
+## Data flow
+
+```text
+Pinned local model ──> phenotype review ──> Track 1 ranking ──> finalist review
+                                                │                    │
+                                                │              FASTQ acquisition
+                                                │                    │
+                                                └────────> CRAM/read validation
+                                                                     │
+Fixed public-source queries ──> evidence corpus ───────────────────────┤
+                                                                     v
+                                                       Local Track 2 synthesis
+                                                                     │
+                                                                     v
+                                                   Private submission materials
+```
+
+Public queries come from `config/track2.yaml`, independently of patient results.
+The corpus and patient-derived candidates are joined locally. Source responses
+are evidence, not executable instructions. Search results and database metadata
+are not promoted into biological proof.
+
+## Code responsibilities
+
+- `src/mva_runner/`: resource accounting, checkpoints, process ownership, local
+  model review, report/workbook/video delivery, and publication audit.
+- `src/mva_track1/`: private data handling, VCF/phenotype parsing, ranking,
+  read support, submission schema and scientific provenance.
+- `src/mva_track2/`: public-source collection and locally reviewed,
+  evidence-linked repurposing hypotheses.
+- `prompts/local/`: versioned local interpretation contracts. Their outputs
+  require schema and source checks; they are not human reviews.
+
+## Ordered scientific rules
+
+`workflow/Snakefile` holds shared paths and includes these files. Numbering is
+for navigation; the dependency graph determines which rules actually run.
+
+| File in `workflow/rules/` | Responsibility |
+|---|---|
+| `00_targets.smk` | Public workflow targets |
+| `10_inputs.smk` | Core-data and phenotype-review gates |
+| `20_resources.smk` | Reference, annotation resources and BWA index |
+| `30_annotation.smk` | Reference checks, normalisation and offline VEP |
+| `40_prioritisation.smk` | Phenopacket, Exomiser and both ranking policies |
+| `50_alignment.smk` | FASTQ QC and streaming duplicate-marked CRAM |
+| `60_validation.smk` | Finalist intervals, read support and phase |
+| `70_provenance.smk` | Initial and post-read provenance manifests |
+
+Python-rule inputs explicitly track relevant scientific code and configuration.
+Both the supervisor and Snakemake must invalidate stale results. Updating a
+renderer alone must not trigger a new alignment. Alignment tracks the actual
+sample/read-group value, not phenotype-review timestamps or finalist lists.
+
+## Coordinate, ranking and mechanism conventions
+
+VCF positions remain 1-based GRCh38 coordinates. Chromosome alias conversion is
+not liftover: reference lengths are checked where available and normalisation
+checks each REF allele against the FASTA. VCF indels retain their anchor base.
+
+Candidate pairs require evidence from both alleles. The current policy uses
+the weaker allele for effect, technical and Exomiser components, excludes
+same-locus artifacts and supported input-cis pairs, and preserves a genome-wide
+comparison. `candidates_baseline.tsv` retains the earlier arithmetic and ordering.
+Unresolved phase is not evidence of trans inheritance. Raw support and phase
+are separate measurements; neither establishes causality.
+
+The parser retains the selected transcript's `Feature`, `HGVSc` and `HGVSp`
+together with its consequence, using the documented
+[VEP output fields](https://www.ensembl.org/info/docs/tools/vep/vep_formats.html).
+Selection remains the existing highest-impact annotation per gene, not an
+exhaustive transcript-equivalence analysis. HGVS identifiers describe variants;
+they do not establish functional effects.
+
+Track 2 distinguishes unknown mechanisms, consequence-predicted loss of
+function, and allele-linked functional literature supporting loss, gain or a
+dominant-negative effect. Functional claims require a matching supplied allele,
+gene, exact primary-source quote, assay, observed effect, reference context and
+limitations, followed by local critique. Missense, gene knockout, pathway
+proximity, or approval in another indication alone cannot establish the chain.
+An empty retained-hypothesis list is a valid, explicitly reported result.
+
+## Persistence and privacy
+
+The supervisor owns a project lock and records PID plus process creation time.
+A replacement supervisor adopts a verified surviving worker rather than
+launching a duplicate. Atomic private checkpoints retain stage fingerprints,
+outputs, attempts and technical error categories. Selected-stage completion is
+not overall project completion or verification of code publication.
+
+All task caches, downloads, models, environments, scratch and outputs count
+against the additional disk allowance. Owner-only private directories and logs
+remain excluded from the explicit GitHub publication allowlist. See
+[operations](02_operations.md) and [submission handoff](03_submission.md).

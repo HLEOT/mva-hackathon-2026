@@ -1,0 +1,35 @@
+# Local environments and caches
+.conda/
+.tools/
+.snakemake/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Gated patient data and all patient-derived intermediates
+data/gated/
+work/private/
+results/private/
+config/proband.local.yaml
+config/proband.draft.local.yaml
+config/finalists.local.tsv
+config/submission.local.json
+config/hf_token.local.txt
+config/*.local.*
+
+# Large public reference resources (recreated from checksummed manifests)
+resources/public/
+
+# Locally packaged challenge deliverables
+submissions/*.csv
+submissions/*.md
+submissions/*.pdf
+submissions/*.zip
+submissions/submission_log.tsv
+submissions/*
+
+# Workflow logs
+logs/
+
+# Keep directory placeholders
+!.gitkeep

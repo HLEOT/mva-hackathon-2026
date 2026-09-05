@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LAUNCHER_PYTHON="${PROJECT_ROOT}/.conda/launcher/bin/python"
+TOKEN_FILE="${PROJECT_ROOT}/config/hf_token.local.txt"
+
+# Override machine-wide cache settings so gated transfer state remains private,
+# writable, Git-ignored, and covered by this project's bounded purge command.
+export HF_HOME="${PROJECT_ROOT}/data/gated/huggingface-cache"
+export HF_HUB_CACHE="${HF_HOME}/hub"
+export HF_XET_CACHE="${HF_HOME}/xet"
+export PYTHONNOUSERSITE=1
+
+if [[ -z "${HF_TOKEN:-}" && -r "${TOKEN_FILE}" ]]; then
+    IFS= read -r HF_TOKEN < "${TOKEN_FILE}" || true
+    if [[ "${HF_TOKEN}" == hf_* ]]; then
+        export HF_TOKEN
+    else
+        unset HF_TOKEN
+    fi
+fi
+
+export PYTHONPATH="${PROJECT_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+cd "${PROJECT_ROOT}"
+
+if [[ "${1:-}" == "bootstrap" ]]; then
+    if ! command -v conda >/dev/null 2>&1; then
+        echo "ERROR: conda is required for bootstrap." >&2
+        exit 2
+    fi
+    if [[ ! -x "${LAUNCHER_PYTHON}" ]]; then
+        mkdir -p "${PROJECT_ROOT}/.conda/pkgs"
+        export CONDA_PKGS_DIRS="${PROJECT_ROOT}/.conda/pkgs"
+        conda env create --prefix "${PROJECT_ROOT}/.conda/launcher" \
+            --file "${PROJECT_ROOT}/workflow/envs/launcher.yaml"
+    fi
+    exec "${LAUNCHER_PYTHON}" -m mva_track1.cli bootstrap-check
+fi
+
+if [[ -x "${LAUNCHER_PYTHON}" ]]; then
+    mkdir -p "${PROJECT_ROOT}/.conda/pkgs"
+    export CONDA_PKGS_DIRS="${PROJECT_ROOT}/.conda/pkgs"
+    exec "${LAUNCHER_PYTHON}" -m mva_track1.cli "$@"
+fi
+
+exec python3 -m mva_track1.cli "$@"

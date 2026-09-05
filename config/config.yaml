@@ -1,0 +1,66 @@
+# Public Track 1 configuration. Private sample and review settings use *.local.*.
+project:
+  proband_id: PROBAND01
+  assembly: GRCh38
+  submission_limit: 10
+  known_mva_genes:
+  - BUB1B
+  - CEP57
+  - TRIP13
+  - CENATAC
+  - SLF2
+  - SMC5
+  - MAD1L1
+huggingface:
+  repo_id: SageBio/mva-hackathon-2026-data
+  repo_type: dataset
+  core_files:
+  - Challenge_Clinical_Phenotype_1.docx
+  - WGS_EX2312012_HGWCNDSX7.vcf.gz
+  - WGS_EX2312012_HGWCNDSX7.vcf.gz.tbi
+  fastq_files:
+  - WGS_EX2312012_HGWCNDSX7_S16_L001_R1_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L001_R2_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L002_R1_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L002_R2_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L003_R1_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L003_R2_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L004_R1_001.fastq.gz
+  - WGS_EX2312012_HGWCNDSX7_S16_L004_R2_001.fastq.gz
+reference:
+  fasta: resources/public/reference/Homo_sapiens_assembly38.fasta
+  fasta_url: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
+  fai_url: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+  dict_url: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+annotation:
+  vep_version: 116
+  vep_cache_dir: resources/public/vep
+  exomiser_version: 15.1.0
+  exomiser_data_version: '2602'
+  # Coding/splice prioritisation in WGS; non-coding coverage is a stated limitation.
+  exomiser_preset: exome
+  exomiser_cli_url: https://github.com/exomiser/Exomiser/releases/download/15.1.0/exomiser-cli-15.1.0-distribution.zip
+  exomiser_cli_sha256: 47faa54d4791686c9dc3f896762834630e9eaf607ad3cf3399074353c3dda248
+  exomiser_data_base_url: https://g-879a9f.f5dc97.75bc.dn.glob.us/data
+  exomiser_dir: resources/public/exomiser
+# AF is a population frequency, not patient allele fraction. Scores are research
+# ranking heuristics, not calibrated probabilities or a clinical diagnosis.
+ranking:
+  max_population_af: 0.01
+  max_variants_per_gene: 50
+  weights:
+    exomiser: 0.45
+    mva_gene: 0.2
+    inheritance: 0.15
+    effect: 0.1
+    rarity: 0.05
+    technical: 0.05
+# Reads use 1-based VCF positions; pileup code converts to 0-based intervals.
+# Mapping/base quality are Phred scores; unresolved phase remains unresolved.
+validation:
+  min_depth: 10
+  min_alt_reads: 3
+  min_mapping_quality: 20
+  min_base_quality: 20
+  min_phase_fragments: 2
+  threads: 64

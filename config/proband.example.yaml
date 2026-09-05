@@ -1,0 +1,15 @@
+# Public template only: all identifiers and review fields below are placeholders.
+# Copy into an ignored *.local.yaml file; never commit a patient's configuration.
+proband_id: PROBAND01
+vcf_sample_id: REPLACE_WITH_VCF_SAMPLE_ID
+# Preserve UNKNOWN unless the authorised source establishes this field.
+sex: UNKNOWN
+# HPO identifiers must be validated against the pinned ontology, not inferred
+# from a label alone. HP:0000000 deliberately fails the real review gate.
+hpo_present:
+  - HP:0000000
+hpo_absent: []
+# Automated reviews must identify themselves as automated, never as a person.
+reviewed_by: REPLACE_WITH_REVIEWER
+reviewed_at: YYYY-MM-DD
+notes: Replace placeholders after reviewing local extraction. Do not copy free clinical text here.

@@ -1,0 +1,11 @@
+name: mva-track1-annotation
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - ensembl-vep=116
+  - bcftools=1.22
+  - htslib=1.22
+  - openjdk=21
+  - python=3.12
+  - pyyaml=6.0
