@@ -136,6 +136,20 @@ def is_live(identity: dict | None) -> bool:
     return bool(identity and process_identity(int(identity["pid"])) == identity)
 
 
+def is_paused(identity: dict | None) -> bool:
+    """An OS-paused child is alive, but is not doing scientific computation.
+
+    Check its birth time before its state so a recycled PID cannot manufacture
+    a pause. Reporting this does not signal a process or authorise resumption.
+    """
+    if not is_live(identity):
+        return False
+    try:
+        return psutil.Process(identity["pid"]).status() == psutil.STATUS_STOPPED
+    except psutil.Error:
+        return False
+
+
 def read_state(path: Path | None = None) -> dict:
     path = path or STATE
     return json.loads(path.read_text()) if path.exists() else {"schema_version": 1, "stages": {}}

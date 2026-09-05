@@ -459,6 +459,10 @@ status report. Revalidate them before choosing the next stage.
   integrity were checked locally; per-module results remain in private records.
   Test scratch is explicitly project-local; this turn's three completed
   legacy test directories were moved into that accounting without discarding files.
+- Implementation verification: 263 synthetic tests passed after adding
+  PID/start-time-checked `child_paused` and `paused_stages` status fields.
+  Sleeping, OS-paused, stale and disappearing processes remain distinct;
+  status output does not disclose raw worker records or signal any process.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -503,6 +507,10 @@ status report. Revalidate them before choosing the next stage.
 - Code checkpoint `f1f130b` published bounded local-review recovery. All 103
   files and modes matched the public tree and isolated checkout; all 247 tests
   and the dependency check passed there. The original staged index was unchanged.
+- Code checkpoint `b1fafa3` published verified QC caveat reporting. All 105
+  files/modes matched the public tree and isolated checkout; all 258 tests and
+  the dependency check passed there. A transient post-update tree mismatch
+  was rechecked before verification was recorded; the original index was preserved.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -555,6 +563,22 @@ status report. Revalidate them before choosing the next stage.
   was 112.36 GB at 20:39 UTC, within the 250 GB allowance. The streaming sorts
   may buffer or spill reads before a final CRAM appears; follow live process
   identity and resource counters, not file existence alone.
+- At 21:25 UTC, a private budget watcher was verified live for the current
+  alignment group. A synthetic parent/child group had first passed pause,
+  continuation, stale-identity refusal and cleanup checks; no real analysis
+  process was signalled in that test. The watcher leaves the 250 GB allowance
+  unchanged and pauses the verified group at 20 GB remaining headroom, retaining
+  memory and scratch ahead of the main 10 GB stop reserve. It never resumes
+  automatically. See work/private/runner/alignment_budget_watch_state.json and
+  the recovery instructions in docs/02_operations.md. At 21:31 UTC it was
+  watching, not pausing, and the same analysis worker remained active.
+- At 21:36 UTC, the watcher verified an OS pause of the owned alignment group
+  at 230.52 GB additional storage, before the approved 250 GB limit. Process
+  memory and temporary files remain intact; no scientific files were deleted.
+  The live-pause receipt and scientific-input snapshot are in
+  work/private/runner/paused_alignment_checkpoint.json. This is not a durable
+  completed alignment or a successful read-validation result. Resumption now
+  requires the storage decision and revalidation of the same live identities.
 
 ### Blockers and prerequisites
 
@@ -582,8 +606,12 @@ On the next execution turn, run ./mva status --json and reconcile the private
 checkpoints with live process identities. The auxiliary refresh has completed
 and the one-shot continuation queue has already launched and exited; their
 receipts under work/private/runner are historical prerequisites, not new jobs
-to start. Follow the full supervisor's running read-validation stage; finalist
-review has passed, but measured read support and phase remain pending. If the
+to start. The last verified read-validation worker is OS-paused for the storage
+decision; finalist review has passed, but measured read support and phase remain
+pending. If the
+budget watcher reports a pause, verify its actual live controller and saved
+worker/group identities; do not launch a duplicate or resume without resolving
+the storage decision. Check `paused_stages` as well as live PIDs. If the
 runner stops, inspect only sanitised categories and local
 validators, then resume the first invalid or incomplete stage after resolving
 the cause. Do not restart healthy workers or weaken scientific evidence gates.
@@ -599,8 +627,9 @@ are implemented. The immutable baseline is 184,345,051,136 bytes. The original
 45-entry staged index is preserved and checkpointed privately. Streaming CRAM
 and immutable pre-read proposals prevent full BAM overlap and unnecessary
 realignment when the shortlist changes. Real phenotype review, source-checked
-finalist review and public evidence acquisition are complete. Raw-read QC and
-alignment are running. A tested, code-only checkpoint is public.
+finalist review and public evidence acquisition are complete. Raw-read QC
+reports have been integrity-checked; alignment is paused with its live state
+retained pending storage authority. A tested, code-only checkpoint is public.
 Full real analyses, final deliverables, remaining recovery/acceptance tests and
 final code-release verification are outstanding.
 

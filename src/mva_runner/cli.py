@@ -46,9 +46,12 @@ def main(argv=None) -> int:
                   "selected_stages": state.get("selected_stages", []),
                   "completion_scope": "selected local stages; code publication is verified separately",
                   "heartbeat": state.get("heartbeat"),
-                  "stages": {n: {"child_live": supervisor.is_live(r.get("child")), **{k:v for k,v in r.items() if k in
+                  "stages": {n: {"child_live": supervisor.is_live(r.get("child")),
+                      "child_paused": supervisor.is_paused(r.get("child")), **{k:v for k,v in r.items() if k in
                       {"status", "started_at", "completed_at", "attempts", "error_category", "space_request", "log"}}
                       } for n,r in state.get("stages", {}).items()}, "storage": snapshot()}
+        report["paused_stages"] = [name for name, record in report["stages"].items()
+                                   if record.get("status") == "running" and record["child_paused"]]
         print(json.dumps(report, indent=2))
     elif args.command == "stop":
         print(supervisor.request_stop())

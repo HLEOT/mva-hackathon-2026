@@ -31,6 +31,11 @@ true. An observation timeout is not a failed analysis. Check process identity,
 heartbeat and storage changes before deciding that work is stalled. Never
 kill a process by an unverified PID or a broad command-name match.
 
+`child_live` includes an OS-paused process. Check `child_paused` and the top-level
+`paused_stages` list too: a supervisor heartbeat is not proof of active
+computation. These fields inspect PID/start-time and kernel process state;
+they do not signal a worker or authorise its resumption.
+
 `--stages` selects a stage plus all its prerequisites, for example
 `./mva run --resume --stages download_reads`. Inspect `selected_stages` in the
 status response: `complete` applies to that selection, not the entire project.
@@ -72,6 +77,30 @@ sorting, fixmate, coordinate sorting and duplicate marking into CRAM; it does
 not retain a complete intermediate BAM. Thread allocation accounts for each
 samtools main process and its additional `-@` workers. Reuse the validated CRAM
 when a shortlist changes.
+
+Streaming does not eliminate temporary-file overlap: the two sorts may retain
+their own BAM runs simultaneously before final merge cleanup. Budget that
+overlap as well as the final CRAM; the behaviour is visible in the pinned
+[samtools 1.22 sorting implementation](https://github.com/samtools/samtools/blob/1.22/bam_sort.c).
+
+For the current already-running alignment, a private one-off watcher in tmux
+session `mva-budget-watch` preserves process memory if storage becomes tight.
+Its receipt is `work/private/runner/alignment_budget_watch_state.json`; verify
+its controller PID/start-time as well as the recorded stage owner. It pauses
+only that validated session/process group when remaining headroom reaches
+20 GB, ahead of the main supervisor's 10 GB reserve. It never raises the 250 GB
+allowance, rewrites main supervisor state, deletes files or resumes automatically.
+This is a live-run recovery aid, not a requirement for a fresh public checkout.
+
+If that receipt reports a verified pause, do not start another supervisor.
+After an explicit storage decision, reconcile the approved contract and
+configuration first. Stop only the verified watcher controller if its old
+hard-coded allowance is being replaced; stopping it does not resume the worker.
+Then verify the saved stage/group/member identities and current scientific
+inputs before an explicit continuation of that same paused group. If the
+worker has exited instead, use normal checkpoint recovery rather than signalling
+a stale PID. A deliberate `./mva stop` can terminate a paused group; its
+in-memory progress is not a durable on-disk checkpoint.
 
 ## Credentials, inference and failure handling
 
