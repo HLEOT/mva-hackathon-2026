@@ -392,7 +392,7 @@ a large job is still running or because a synthetic test suite passes.
   video, resource limits, and code-only GitHub publication.
 - [x] Approved plan saved as a Markdown execution guide.
 - [x] Milestone 1: execution contract and baseline.
-- [ ] Milestone 2: unified launcher and persistent execution.
+- [x] Milestone 2: unified launcher and persistent execution.
 - [ ] Milestone 3: complete and strengthen Track 1.
 - [ ] Milestone 4: raw-read validation within the storage allowance.
 - [ ] Milestone 5: local interpretation.
@@ -492,6 +492,9 @@ status report. Revalidate them before choosing the next stage.
 - Code checkpoint `083a55f` published direct loopback transport. All 102 files
   and modes matched the public tree and isolated checkout; all 242 tests and
   the dependency check passed there. The original staged index was unchanged.
+- Code checkpoint `f1f130b` published bounded local-review recovery. All 103
+  files and modes matched the public tree and isolated checkout; all 247 tests
+  and the dependency check passed there. The original staged index was unchanged.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -536,6 +539,14 @@ status report. Revalidate them before choosing the next stage.
   recovery tests passed and all prior owners were confirmed stopped, the full
   run was resumed with bounded local review recovery. Detailed diagnostics
   and attempt records remain private; read-validation acceptance is pending.
+- At 20:34 UTC, the new finalist review had passed exact evidence checks, with
+  candidate/model hashes and the finalist-table schema revalidated locally.
+  The full supervisor was running read validation; non-destructive BWA
+  provenance and alignment were scheduled, with no index rebuild. FastQC and
+  alignment were both observed live at 20:38 UTC. Additional allocated storage
+  was 112.36 GB at 20:39 UTC, within the 250 GB allowance. The streaming sorts
+  may buffer or spill reads before a final CRAM appears; follow live process
+  identity and resource counters, not file existence alone.
 
 ### Blockers and prerequisites
 
@@ -556,8 +567,9 @@ On the next execution turn, run ./mva status --json and reconcile the private
 checkpoints with live process identities. The auxiliary refresh has completed
 and the one-shot continuation queue has already launched and exited; their
 receipts under work/private/runner are historical prerequisites, not new jobs
-to start. Follow the full supervisor and verify bounded finalist review before
-read alignment. If it stops, inspect only sanitised categories and local
+to start. Follow the full supervisor's running read-validation stage; finalist
+review has passed, but measured read support and phase remain pending. If the
+runner stops, inspect only sanitised categories and local
 validators, then resume the first invalid or incomplete stage after resolving
 the cause. Do not restart healthy workers or weaken scientific evidence gates.
 Finish raw-read validation, local Track 2 synthesis, and packaging as their
@@ -571,8 +583,9 @@ runner, private review, both track implementations and stronger candidate gates
 are implemented. The immutable baseline is 184,345,051,136 bytes. The original
 45-entry staged index is preserved and checkpointed privately. Streaming CRAM
 and immutable pre-read proposals prevent full BAM overlap and unnecessary
-realignment when the shortlist changes. Real phenotype review and public
-evidence acquisition are complete. A tested, code-only checkpoint is public.
+realignment when the shortlist changes. Real phenotype review, source-checked
+finalist review and public evidence acquisition are complete. Raw-read QC and
+alignment are running. A tested, code-only checkpoint is public.
 Full real analyses, final deliverables, remaining recovery/acceptance tests and
 final code-release verification are outstanding.
 
