@@ -96,6 +96,14 @@ Do not suppress rerun triggers or manufacture completion markers simply to
 reuse them. Full packaging rechecks large-file checksums; ordinary status
 checks use the lighter recorded metadata where documented.
 
+The existing BWA index has a dedicated original environment definition. Do not
+replace `workflow/envs/bwa_index.yaml` with the broader current read environment
+merely to add parser or QC dependencies: this can trigger reindexing, and the
+scheduler deletes declared outputs before rerunning a shell rule. The separate
+`record_bwa_provenance` rule is read-only with respect to index files. A mismatch
+in reference identity or BWA executables stops for investigation without
+blessing compatibility or erasing the preserved sidecars.
+
 ## Verification and publication
 
 ```bash

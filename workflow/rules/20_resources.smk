@@ -66,6 +66,29 @@ rule index_bwa_reference:
         "logs/index_bwa_reference.log"
     threads: 16
     conda:
-        "../envs/reads.yaml"
+        # This byte-preserved definition is the index's original toolchain.
+        # Adding read-QC/parser dependencies must not erase and rebuild an
+        # unchanged index. Its legacy environment name is intentional.
+        "../envs/bwa_index.yaml"
     shell:
         "mkdir -p logs && bwa-mem2 index {input:q} > {log:q} 2>&1 && touch {output.marker:q}"
+
+
+rule record_bwa_provenance:
+    input:
+        reference=REFERENCE,
+        fai=REFERENCE_FAI,
+        indexes=BWA_INDEX + [BWA_INDEX_MARKER],
+        reference_manifest="resources/public/manifest.json",
+        index_environment="workflow/envs/bwa_index.yaml",
+        reads_environment="workflow/envs/reads.yaml",
+        code=["src/mva_runner/bwa_provenance.py", "src/mva_track1/common.py", "src/mva_track1/workflow_tasks.py"]
+    output:
+        BWA_INDEX_PROVENANCE
+    log:
+        "logs/record_bwa_provenance.log"
+    conda:
+        "../envs/launcher.yaml"
+    shell:
+        "mkdir -p logs && PYTHONPATH=src python -m mva_runner.bwa_provenance "
+        "--reference {input.reference:q} --output {output:q} > {log:q} 2>&1"

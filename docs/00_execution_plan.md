@@ -437,6 +437,10 @@ status report. Revalidate them before choosing the next stage.
   for the pending real read analysis. Insertions require a matching anchor and
   adequate inserted-base qualities; unmodelled representations cannot create
   direct fragment-phase evidence, and unmatched indels remain inconclusive.
+- Implementation verification: 229 synthetic tests passed after isolating the
+  original BWA index environment and adding non-destructive index provenance.
+  The full read-validation dry run parses all 27 rules, schedules provenance
+  verification and does not schedule reindexing; no rerun triggers were disabled.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -491,6 +495,19 @@ status report. Revalidate them before choosing the next stage.
   challenge, host video, delete data or send messages. Its receipt is
   work/private/runner/resume_after_refresh_state.json. Do not launch a competing
   full supervisor while this queue is waiting or has just launched one.
+- At 19:27 UTC, the raw-read download was complete: all eight files totalled
+  84,668,434,104 bytes; recorded hashes matched pinned upstream LFS digests,
+  current sizes/timestamps matched verification, and no transfer partials or
+  download child remained. Additional allocated storage was 108.26 GB, leaving
+  141.74 GB within the allowance. This is not completion of raw-read QC.
+- The ready read-workflow dry run exposed an environment-only BWA reindex
+  trigger. The waiting queue was temporarily paused, without stopping the live
+  annotation refresh. The original environment bytes were isolated in
+  workflow/envs/bwa_index.yaml; all six BWA executable hashes matched the read
+  consumer environment. A full read-only audit hashed five index sidecars and
+  verified all 3,366 reference contigs, without modifying index files. The
+  continuation queue was then restored and verified live. Detailed audit and
+  pause-resolution receipts remain under work/private/runner.
 
 ### Blockers and prerequisites
 

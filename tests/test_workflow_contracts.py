@@ -37,7 +37,7 @@ def test_ordered_rules_are_all_included_and_conda_paths_resolve():
     assert len(includes) == 8
     assert {Path("workflow") / name for name in includes} == set(Path("workflow/rules").glob("*.smk"))
     names = re.findall(r'^rule (\w+):', _workflow_text(), re.M)
-    assert len(names) == len(set(names)) == 26
+    assert len(names) == len(set(names)) == 27
     for name in includes:
         path = Path("workflow") / name
         for environment in re.findall(r'conda:\s*"([^"]+)"', path.read_text()):
@@ -60,3 +60,14 @@ def test_alignment_is_independent_of_phenotype_reviews_and_finalist_changes():
     assert "finalists" not in inputs
     assert "PROBAND['vcf_sample_id']" in rule
     assert "read_group=" in rule
+
+
+def test_index_toolchain_is_isolated_and_provenance_precedes_alignment():
+    text = _workflow_text()
+    rule = text.split("rule index_bwa_reference:", 1)[1].split("\nrule ", 1)[0]
+    assert '"../envs/bwa_index.yaml"' in rule
+    assert '"../envs/reads.yaml"' not in rule
+    alignment = text.split("rule align_mark_duplicates:", 1)[1].split("\nrule ", 1)[0]
+    assert "BWA_INDEX_PROVENANCE" in alignment.split("    output:", 1)[0]
+    final = text.split("rule final_run_manifest:", 1)[1]
+    assert "{input.bwa_provenance:q}" in final and "{input.bwa_index_environment:q}" in final

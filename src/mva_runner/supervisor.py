@@ -65,7 +65,8 @@ def stages(tracks: str = "both") -> list[Stage]:
         Stage("download_reads", ("finalists",), ("config/config.yaml", "src/mva_track1/download.py"),
               ("work/private/runner/reads_downloaded.json",)),
         Stage("validate_reads", ("download_reads", "finalists"), ("workflow/Snakefile", "src/mva_track1/validation.py",
-              "src/mva_track1/submission.py", "src/mva_runner/review.py", "workflow/envs/reads.yaml")
+              "src/mva_track1/submission.py", "src/mva_runner/review.py", "workflow/envs/reads.yaml",
+              "src/mva_runner/bwa_provenance.py", "workflow/envs/bwa_index.yaml")
               + scientific_inputs + read_rules + scientific_envs,
               ("config/finalists.local.tsv", "results/private/read_validation.tsv"), 95_000_000_000),
     ]

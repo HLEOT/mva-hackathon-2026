@@ -61,6 +61,16 @@ Both the supervisor and Snakemake must invalidate stale results. Updating a
 renderer alone must not trigger a new alignment. Alignment tracks the actual
 sample/read-group value, not phenotype-review timestamps or finalist lists.
 
+The BWA index uses `workflow/envs/bwa_index.yaml`, byte-preserved from its
+original completed environment. Its legacy environment name and absence of
+new comments inside that file are intentional: the scheduler fingerprints the
+definition bytes. Read-QC/parser additions belong in `reads.yaml`. A separate
+provenance rule checks all index/reference contig names, lengths and offsets,
+hashes the five sidecars, records both solved toolchains, and requires identical
+BWA executables before alignment. Its receipt enters final provenance; index
+files are never outputs of that verification rule and cannot be deleted by its
+failure cleanup. This does not claim a de novo reconstruction of the index.
+
 ## Coordinate, ranking and mechanism conventions
 
 VCF positions remain 1-based GRCh38 coordinates. Chromosome alias conversion is

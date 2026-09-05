@@ -52,6 +52,8 @@ rule final_run_manifest:
         annotation_env="workflow/envs/annotation.yaml",
         reads_env="workflow/envs/reads.yaml",
         bwa_index=BWA_INDEX_MARKER,
+        bwa_provenance=BWA_INDEX_PROVENANCE,
+        bwa_index_environment="workflow/envs/bwa_index.yaml",
         vep_cache=VEP_CACHE_MARKER,
         vep_manifest=VEP_CACHE_MANIFEST,
         exomiser=EXOMISER_MARKER,
@@ -75,7 +77,8 @@ rule final_run_manifest:
         "{input.cram:q} {input.crai:q} {input.core_manifest:q} {input.reference_manifest:q} "
         "{input.phenotype:q} {input.finalists:q} {input.config:q} {input.snakefile:q} "
         "{input.launcher_env:q} {input.hts_env:q} {input.annotation_env:q} "
-        "{input.reads_env:q} {input.bwa_index:q} {input.vep_cache:q} "
+        "{input.reads_env:q} {input.bwa_index:q} {input.bwa_provenance:q} "
+        "{input.bwa_index_environment:q} {input.vep_cache:q} "
         "{input.vep_manifest:q} {input.exomiser:q} {input.exomiser_manifest:q} "
         "{input.python_sources:q} {input.launcher:q} {input.project_metadata:q} "
         "{input.workflow_rules:q} {input.baseline:q} {input.execution:q} "

@@ -27,6 +27,7 @@ BWA_INDEX = [
     f"{REFERENCE}.pac",
 ]
 BWA_INDEX_MARKER = str(Path(REFERENCE).parent / ".bwa_mem2_complete")
+BWA_INDEX_PROVENANCE = str(Path(REFERENCE).parent / "bwa_index_provenance.json")
 VEP_CACHE_DIR = config["annotation"]["vep_cache_dir"]
 VEP_VERSION = str(config["annotation"]["vep_version"])
 VEP_CACHE_MARKER = str(Path(VEP_CACHE_DIR) / f".v{VEP_VERSION}_merged_complete")

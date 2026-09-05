@@ -26,7 +26,7 @@ rule align_mark_duplicates:
         r1=R1,
         r2=R2,
         reference=REFERENCE,
-        index=BWA_INDEX + [BWA_INDEX_MARKER]
+        index=BWA_INDEX + [BWA_INDEX_MARKER, BWA_INDEX_PROVENANCE]
     output:
         cram=CRAM,
         crai=CRAI
