@@ -109,12 +109,39 @@ def _endpoint() -> str:
     return f"http://127.0.0.1:{int(cfg['port'])}"
 
 
+class _NoInferenceRedirect(urllib.request.HTTPRedirectHandler):
+    """A local inference response cannot authorise a second network destination."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        fp.close()
+        # Do not put the response's URL, headers or body in an operational error.
+        raise Track1Error("Local inference redirects are forbidden")
+
+
+def _open_local(request: str | urllib.request.Request, *, timeout: float):
+    """Reach only the configured loopback API, independent of proxy settings.
+
+    NO_PROXY is not a privacy guarantee: a resumed job can inherit a different
+    environment. Disable automatic proxies explicitly, and reject redirects so
+    neither private request content nor the authentication header can follow one.
+    Public resource downloads deliberately use their separate download client.
+    """
+    url = request.full_url if isinstance(request, urllib.request.Request) else request
+    endpoint = _endpoint()
+    if url not in {endpoint + "/health", endpoint + "/v1/chat/completions"}:
+        raise Track1Error("Local inference request has an unapproved destination")
+    if isinstance(request, urllib.request.Request) and request.has_proxy():
+        raise Track1Error("Local inference requests cannot use a proxy")
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoInferenceRedirect())
+    return opener.open(request, timeout=timeout)
+
+
 def _healthy() -> bool:
     try:
         # Do not send credentials to a server unless it is the process we own.
         if not is_live(read_state(PROCESS).get("process")):
             return False
-        with urllib.request.urlopen(_endpoint() + "/health", timeout=3) as response:
+        with _open_local(_endpoint() + "/health", timeout=3) as response:
             return response.status == 200
     except (OSError, urllib.error.URLError):
         return False
@@ -180,7 +207,7 @@ def infer(system: str, user: str, schema: dict, purpose: str) -> dict:
         data=json.dumps(payload).encode(), headers={"Content-Type":"application/json",
         "Authorization":"Bearer " + TOKEN.read_text().strip()})
     try:
-        with urllib.request.urlopen(request, timeout=600) as response:
+        with _open_local(request, timeout=600) as response:
             reply = json.load(response)
         text = reply["choices"][0]["message"]["content"]
         if "</think>" in text:

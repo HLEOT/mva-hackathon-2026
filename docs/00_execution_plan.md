@@ -441,6 +441,11 @@ status report. Revalidate them before choosing the next stage.
   original BWA index environment and adding non-destructive index provenance.
   The full read-validation dry run parses all 27 rules, schedules provenance
   verification and does not schedule reindexing; no rerun triggers were disabled.
+- Implementation verification: 242 synthetic tests passed after disabling
+  environment proxies and rejecting redirects for all loopback inference calls.
+  At 20:14 UTC, a live synthetic probe verified the owned loopback listener,
+  unauthenticated rejection (HTTP 401), and authenticated structured inference.
+  No patient content was used in that probe; detailed receipts remain private.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -476,6 +481,9 @@ status report. Revalidate them before choosing the next stage.
   dependency checks passed in the isolated Python environment. Eight additional
   invented-read BAM cases passed with the actual solved pysam 0.23.3 runtime.
   Receipts are kept under work/private/runner, not in the public repository.
+- Code checkpoint `6ed7bab` published non-destructive BWA provenance. All 101
+  files and modes matched the public tree and isolated checkout; all 229 tests
+  and the dependency check passed there. The original staged index was unchanged.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -508,6 +516,11 @@ status report. Revalidate them before choosing the next stage.
   verified all 3,366 reference contigs, without modifying index files. The
   continuation queue was then restored and verified live. Detailed audit and
   pause-resolution receipts remain under work/private/runner.
+- At 20:11 UTC, annotation was still actively writing under its verified
+  controller and worker, and the continuation queue was live and waiting.
+  Read-tool CLI probes confirmed the installed QC and phasing options. The
+  Synapse wiki's public attachment metadata contained only a drawing and its
+  preview, not a citation document; organiser confirmation was requested.
 
 ### Blockers and prerequisites
 

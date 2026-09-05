@@ -7,6 +7,14 @@ workflow. The hosted coding agent may inspect code, synthetic fixtures and
 sanitised status, but patient-level evidence is interpreted only by local code
 and authenticated loopback inference.
 
+The inference client allows only its configured loopback health and completion
+URLs. It explicitly disables environment-derived proxies and refuses every HTTP
+redirect, so resumed jobs do not rely on inherited `NO_PROXY` settings. This
+restriction applies to private inference, not the separate public-download
+client. Python's [proxy and redirect handlers](https://docs.python.org/3/library/urllib.request.html)
+are configured explicitly; synthetic tests check that request bodies and
+credentials never follow a redirected destination.
+
 ## Data flow
 
 ```text
