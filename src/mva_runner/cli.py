@@ -17,7 +17,8 @@ from . import supervisor
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="mva")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("preflight")
+    preflight = sub.add_parser("preflight")
+    preflight.add_argument("--offline", action="store_true", help="Do not contact authentication/publication endpoints; network checks remain unverified")
     status = sub.add_parser("status")
     status.add_argument("--json", action="store_true")
     for name in ("run", "_supervise"):
@@ -33,12 +34,10 @@ def main(argv=None) -> int:
     cfg = load_jsonish(EXECUTION)
     if args.command == "preflight":
         establish_baseline()
-        space = require_space()
-        report = {"storage": space, "limits": cfg["limits"],
-                  "launcher_present": (PROJECT_ROOT / ".conda/launcher/bin/python").is_file(),
-                  "hf_token_available": bool(os.environ.get("HF_TOKEN")),
-                  "github_repository": cfg["delivery"]["github_repository"]}
+        from .preflight import collect
+        report = collect(cfg, offline=args.offline)
         print(json.dumps(report, indent=2))
+        return 0 if report["base_prerequisites_verified"] else 2
     elif args.command == "status":
         state = supervisor.read_state()
         report = {"status": state.get("status", "not_started"),

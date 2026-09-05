@@ -34,7 +34,8 @@ kill a process by an unverified PID or a broad command-name match.
 `--stages` selects a stage plus all its prerequisites, for example
 `./mva run --resume --stages download_reads`. Inspect `selected_stages` in the
 status response: `complete` applies to that selection, not the entire project.
-`--tracks track1` is a scientific-only subset ending at read validation; it does
+`--tracks track1` is a scientific-only subset ending at read validation and
+provenance; it does
 not collect Track 2 evidence or build the unified two-track package.
 
 `./mva package` runs the two-track packaging dependency chain in the foreground.
@@ -42,6 +43,19 @@ For unattended work, prefer the persistent full `run` command. The original
 `mva-track1` CLI remains available for its documented Track 1 workflow.
 
 ## Resource and storage contract
+
+Preflight performs bounded identity and gated-file metadata checks, reports
+scientific resource readiness, checks the owned local model, and lists missing
+delivery tools/disclosures. It never sends patient content or prints credentials.
+`--offline` skips network checks and leaves authentication unverified; it does
+not turn token presence into evidence of access. Missing future outputs do not
+block independent earlier stages. Execution rejects limits beyond the approved
+contract even when preflight was skipped.
+
+The host must supply `tmux`, `pdftotext` and `pdftoppm` (Poppler). PDF tests and
+delivery use those local executables. The delivery environment supplies FFmpeg;
+the verified local speech runtime is recorded separately. A clean Python
+environment alone does not supply these operating-system tools.
 
 - Use no more than 112 CPUs and 400 GiB RAM across concurrent work.
 - The additional allowance is 250,000,000,000 decimal bytes, not free space on
@@ -86,7 +100,7 @@ checks use the lighter recorded metadata where documented.
 
 ```bash
 # Synthetic tests only; these never establish real scientific completion.
-.conda/launcher/bin/python -m pytest -q
+TMPDIR="$PWD/work/private/tmp" .conda/launcher/bin/python -m pytest -q
 
 # Audit eligible source files; print only pass/fail and safe counts.
 PYTHONPATH=src .conda/launcher/bin/python -m mva_runner.publication

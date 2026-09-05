@@ -97,6 +97,12 @@ launching a duplicate. Atomic private checkpoints retain stage fingerprints,
 outputs, attempts and technical error categories. Selected-stage completion is
 not overall project completion or verification of code publication.
 
+The separate `provenance` stage owns the final scientific manifest. Report or
+publication-code edits can refresh source hashes without invalidating the
+measured reads or reserving alignment scratch space again. The manifest records
+both ranking policies, ordered rule files, source modules, runtime configuration
+and launchers alongside scientific inputs and solved environments.
+
 All task caches, downloads, models, environments, scratch and outputs count
 against the additional disk allowance. Owner-only private directories and logs
 remain excluded from the explicit GitHub publication allowlist. See

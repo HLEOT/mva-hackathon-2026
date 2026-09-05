@@ -74,3 +74,8 @@ def validate_reads() -> None:
     from .review import reassess_reads
     if reassess_reads():
         workflow("validate_finalists")
+
+
+def provenance() -> None:
+    """Refresh the final scientific snapshot without owning read measurements."""
+    workflow("final_run_manifest")

@@ -427,6 +427,9 @@ status report. Revalidate them before choosing the next stage.
   live-process recovery, publication-race, HGVS/functional-evidence and shorter
   PDF re-render tests. The real prioritisation dry run parses all 26 rules and
   schedules source-invalidated outputs; no rerun triggers were suppressed.
+- Implementation verification: 198 synthetic tests passed after bounded
+  authentication preflight and separation of provenance refresh from expensive
+  read-validation checkpoints. All five scientific environments are ready.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -440,18 +443,24 @@ status report. Revalidate them before choosing the next stage.
   retrieval metadata, checksums and bounded-search limitations are retained.
 - Official methods workbook and current challenge sources were downloaded at a
   pinned Space revision. Local FFmpeg and verified speech runtime are installed.
-- Real annotation/prioritisation is running; final scientific and delivery
-  acceptance checks have not yet passed.
+- The initial real annotation/prioritisation completed; source changes require
+  a refresh. Final scientific and delivery acceptance checks have not passed.
 - Documentation handoff check, 2026-09-05: the intended public GitHub repository
   exists and the connected account has push access. The remote had no branch
   heads when checked before the first documentation upload.
 - Documentation published and bytes verified in commits `378ebef` and `ea573c5`;
-  the original 45-entry staged index was preserved. This is not a full code
-  release or scientific-completion claim.
-- Live execution check at 17:27 UTC: the read-download supervisor and child
-  were verified alive; additional storage was 48.59 GB of the 250 GB allowance.
-  The earlier prioritisation/finalist run completed, but scientific source
-  changes now require downstream revalidation before final delivery.
+  the original 45-entry staged index was preserved.
+- Code checkpoint `1c17d4b` published 95 audited files (470,834 bytes). A fresh
+  public clone matched every audited path, blob and executable mode. Its 187
+  tests passed in a new Python virtual environment with no system-site-packages;
+  dependency checks passed. This uses host Poppler/fonts, not a clean OS image.
+  Later changes require their own publication and reproduction verification.
+- Live execution check at 18:24 UTC: the read-download supervisor and child
+  were verified alive; additional storage was 76.88 GB of the 250 GB allowance.
+  A separate private controller was then started for the required prioritisation
+  refresh, with 16 CPUs inside the existing 112-CPU affinity, aggregate memory
+  and disk guards, private logs and its own PID/start-time receipt. It does not
+  mutate main supervisor state. Wait for both owned jobs before full resumption.
 
 ### Blockers and prerequisites
 
@@ -467,9 +476,10 @@ status report. Revalidate them before choosing the next stage.
 ### Exact next action
 
 On the next execution turn, run ./mva status --json and reconcile the private
-checkpoints with live process identities. Resume from the first incomplete or
-invalid stage; do not restart a healthy process based on the historical status
-above. Finish remaining recovery/acceptance tests, raw-read validation, local
+checkpoints with live process identities, including the one-off refresh receipt
+at work/private/runner/prioritise_refresh_state.json. Resume from the first
+incomplete or invalid stage after both jobs finish; do not restart a healthy
+process based on historical status above. Finish remaining recovery/acceptance tests, raw-read validation, local
 Track 2 synthesis, and packaging as their prerequisites become ready. Publish
 coherent audited changes incrementally and verify the final code release.
 
@@ -481,8 +491,9 @@ are implemented. The immutable baseline is 184,345,051,136 bytes. The original
 45-entry staged index is preserved and checkpointed privately. Streaming CRAM
 and immutable pre-read proposals prevent full BAM overlap and unnecessary
 realignment when the shortlist changes. Real phenotype review and public
-evidence acquisition are complete. Full real analyses, final deliverables,
-remaining recovery/acceptance tests and code publication are outstanding.
+evidence acquisition are complete. A tested, code-only checkpoint is public.
+Full real analyses, final deliverables, remaining recovery/acceptance tests and
+final code-release verification are outstanding.
 
 ## 7. Reference sources
 

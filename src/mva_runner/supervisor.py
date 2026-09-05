@@ -67,17 +67,27 @@ def stages(tracks: str = "both") -> list[Stage]:
         Stage("validate_reads", ("download_reads", "finalists"), ("workflow/Snakefile", "src/mva_track1/validation.py",
               "src/mva_track1/submission.py", "src/mva_runner/review.py", "workflow/envs/reads.yaml")
               + scientific_inputs + read_rules + scientific_envs,
-              ("config/finalists.local.tsv", "results/private/read_validation.tsv", "results/private/final_run_manifest.json"), 95_000_000_000),
+              ("config/finalists.local.tsv", "results/private/read_validation.tsv"), 95_000_000_000),
     ]
     if tracks == "both":
         result.append(Stage("track2", ("public_evidence", "validate_reads", "model"),
                       ("config/track2.yaml", "src/mva_track2/analysis.py", "prompts/local/track2.md"),
                       ("results/private/track2/hypotheses.json", "results/private/track2/evidence.tsv")))
-    else:
+    # Provenance owns its manifest independently of the expensive read stage.
+    # A renderer/code-release edit updates recorded hashes without requiring a
+    # fresh 95 GB alignment reservation or invalidating measured read evidence.
+    provenance_sources = tuple(sorted(str(path.relative_to(PROJECT_ROOT))
+        for path in (PROJECT_ROOT / "src").rglob("*.py")))
+    result.append(Stage("provenance", ("validate_reads",), provenance_sources +
+        tuple(sorted(str(path.relative_to(PROJECT_ROOT)) for path in (PROJECT_ROOT / "workflow").rglob("*.smk"))) +
+        ("workflow/Snakefile", "config/config.yaml", "config/execution.yaml", "config/track2.yaml",
+         "data/gated/manifest.json", "mva", "mva-track1", "pyproject.toml"),
+        ("results/private/final_run_manifest.json",), 1_000_000_000))
+    if tracks != "both":
         # Track 1 is an explicit scientific-only subset. The unified package
         # always contains both tracks and cannot truthfully run without Track 2.
         return [stage for stage in result if stage.name != "public_evidence"]
-    dependencies = ("validate_reads", "track2")
+    dependencies = ("provenance", "track2")
     result.append(Stage("package", dependencies, ("config/execution.yaml", "config/ai_usage.local.yaml",
                         "src/mva_runner/delivery.py", "src/mva_runner/official.py", "src/mva_runner/render.py",
                         "src/mva_runner/workbooks.py", "src/mva_runner/pitch.py", "src/mva_runner/speech.py",
@@ -200,6 +210,9 @@ def run(tracks: str = "both", only: tuple[str, ...] = ()) -> int:
     ensure_private_dir(STATE_DIR)
     ensure_private_dir(PROJECT_ROOT / "logs")
     cfg = load_jsonish(EXECUTION)
+    from .preflight import limits_valid
+    if not limits_valid(cfg.get("limits", {})):
+        raise Track1Error("Execution limits exceed the approved contract or have invalid units")
     lock = (STATE_DIR / "run.lock").open("a+")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

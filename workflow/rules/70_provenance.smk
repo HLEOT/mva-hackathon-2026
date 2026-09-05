@@ -4,6 +4,7 @@
 rule run_manifest:
     input:
         candidates="results/private/candidates_ranked.tsv",
+        baseline="results/private/candidates_baseline.tsv",
         core_manifest="data/gated/manifest.json",
         reference_manifest="resources/public/manifest.json",
         phenotype=PROBAND_CONFIG,
@@ -14,7 +15,10 @@ rule run_manifest:
         annotation_env="workflow/envs/annotation.yaml",
         reads_env="workflow/envs/reads.yaml",
         workflow_rules=RULE_SOURCES,
-        python_sources=PYTHON_SOURCES
+        python_sources=PYTHON_SOURCES,
+        execution="config/execution.yaml",
+        track2_settings="config/track2.yaml",
+        unified_launcher="mva"
     output:
         "results/private/run_manifest.json"
     log:
@@ -25,12 +29,14 @@ rule run_manifest:
         "mkdir -p logs && PYTHONPATH=src python -m mva_track1.workflow_tasks manifest --output {output:q} "
         "{input.core_manifest:q} {input.reference_manifest:q} {input.phenotype:q} "
         "{input.config:q} {input.snakefile:q} {input.launcher_env:q} {input.hts_env:q} "
-        "{input.annotation_env:q} {input.reads_env:q} {input.workflow_rules:q} {input.python_sources:q} > {log:q} 2>&1"
+        "{input.annotation_env:q} {input.reads_env:q} {input.workflow_rules:q} {input.python_sources:q} "
+        "{input.baseline:q} {input.execution:q} {input.track2_settings:q} {input.unified_launcher:q} > {log:q} 2>&1"
 
 
 rule final_run_manifest:
     input:
         candidates="results/private/candidates_ranked.tsv",
+        baseline="results/private/candidates_baseline.tsv",
         validation="results/private/read_validation.tsv",
         qc="work/private/qc/multiqc_report.html",
         cram=CRAM,
@@ -53,7 +59,10 @@ rule final_run_manifest:
         python_sources=PYTHON_SOURCES,
         launcher="mva-track1",
         project_metadata="pyproject.toml",
-        workflow_rules=RULE_SOURCES
+        workflow_rules=RULE_SOURCES,
+        execution="config/execution.yaml",
+        track2_settings="config/track2.yaml",
+        unified_launcher="mva"
     output:
         "results/private/final_run_manifest.json"
     log:
@@ -69,4 +78,5 @@ rule final_run_manifest:
         "{input.reads_env:q} {input.bwa_index:q} {input.vep_cache:q} "
         "{input.vep_manifest:q} {input.exomiser:q} {input.exomiser_manifest:q} "
         "{input.python_sources:q} {input.launcher:q} {input.project_metadata:q} "
-        "{input.workflow_rules:q} > {log:q} 2>&1"
+        "{input.workflow_rules:q} {input.baseline:q} {input.execution:q} "
+        "{input.track2_settings:q} {input.unified_launcher:q} > {log:q} 2>&1"

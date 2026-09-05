@@ -211,7 +211,8 @@ def _environment_state(environments: dict, name: str) -> str:
     return "WAIT"
 
 
-def _status() -> None:
+def readiness() -> dict[str, str]:
+    """Return technical readiness without printing private validator errors."""
     cfg = load_jsonish(DEFAULT_CONFIG)
     reference_fasta = PROJECT_ROOT / cfg["reference"]["fasta"]
     reference = reference_fasta.parent
@@ -275,7 +276,11 @@ def _status() -> None:
         ),
         "submission identity": _validated_state(SUBMISSION_CONFIG, _submission_identity),
     }
-    for label, state in checks.items():
+    return checks
+
+
+def _status() -> None:
+    for label, state in readiness().items():
         print(f"{state:7} {label}")
 
 

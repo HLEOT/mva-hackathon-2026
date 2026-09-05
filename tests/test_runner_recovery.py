@@ -22,7 +22,7 @@ def isolated_runner(tmp_path, monkeypatch):
     monkeypatch.setattr(supervisor, "STATE_DIR", state_dir)
     monkeypatch.setattr(supervisor, "STATE", state_dir / "state.json")
     monkeypatch.setattr(supervisor, "load_jsonish", lambda path: {
-        "limits": {"cpus": 1, "memory_gib": 1},
+        "limits": {"cpus": 1, "memory_gib": 1, "additional_disk_bytes": 250_000_000_000, "disk_reserve_bytes": 10_000_000_000},
         "supervisor": {"transient_attempts": 2, "heartbeat_seconds": 0.01, "retry_seconds": 0.01}})
     monkeypatch.setattr(supervisor, "require_space", lambda *args, **kwargs: {})
     monkeypatch.setattr(supervisor.os, "sched_setaffinity", lambda *args: None)
@@ -83,8 +83,26 @@ def test_stage_fingerprints_include_ordered_rules_without_cross_stage_churn(tmp_
 def test_track1_subset_does_not_claim_to_package_track2():
     names = {stage.name for stage in supervisor.stages("track1")}
     assert "validate_reads" in names
+    assert "provenance" in names
     assert names.isdisjoint({"package", "track2", "public_evidence"})
     assert "package" in {stage.name for stage in supervisor.stages("both")}
+
+
+def test_report_code_changes_refresh_provenance_without_realigning(tmp_path):
+    stages = {stage.name: stage for stage in supervisor.stages()}
+    before = {name: supervisor.fingerprint(stage, {}, tmp_path) for name, stage in stages.items()}
+    renderer = tmp_path / "src/mva_runner/render.py"
+    renderer.parent.mkdir(parents=True)
+    renderer.write_text("# synthetic renderer update\n")
+    after = {name: supervisor.fingerprint(stage, {}, tmp_path) for name, stage in stages.items()}
+    assert before["provenance"] != after["provenance"]
+    assert before["package"] != after["package"]
+    assert before["validate_reads"] == after["validate_reads"]
+    assert before["prioritise"] == after["prioritise"]
+    final_manifest = "results/private/final_run_manifest.json"
+    assert final_manifest in stages["provenance"].outputs
+    assert final_manifest not in stages["validate_reads"].outputs
+    assert "provenance" in stages["package"].dependencies
 
 
 def test_duplicate_supervisor_cannot_acquire_project_lock(isolated_runner):
