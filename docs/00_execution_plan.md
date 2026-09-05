@@ -467,6 +467,11 @@ status report. Revalidate them before choosing the next stage.
   unchanged, and 198 tests passed in the same isolated reproduction environment
   after updating its public checkout. Generated editable-install metadata was
   preserved rather than discarded.
+- Code checkpoint `4ab33f7` published the integrity and conservative-evidence
+  changes. All 98 files/modes matched a fresh public checkout; 223 tests and
+  dependency checks passed in the isolated Python environment. Eight additional
+  invented-read BAM cases passed with the actual solved pysam 0.23.3 runtime.
+  Receipts are kept under work/private/runner, not in the public repository.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -479,6 +484,13 @@ status report. Revalidate them before choosing the next stage.
   refresh, with 16 CPUs inside the existing 112-CPU affinity, aggregate memory
   and disk guards, private logs and its own PID/start-time receipt. It does not
   mutate main supervisor state. Wait for both owned jobs before full resumption.
+- At 18:56 UTC, a private continuation queue was verified live in tmux session
+  `mva-resume-queue`. It waits for those exact two process owners to finish
+  successfully, then launches `./mva run --resume --tracks both` once. It aborts
+  on stopped, failed or replaced prerequisites; it does not submit to the
+  challenge, host video, delete data or send messages. Its receipt is
+  work/private/runner/resume_after_refresh_state.json. Do not launch a competing
+  full supervisor while this queue is waiting or has just launched one.
 
 ### Blockers and prerequisites
 
@@ -497,7 +509,10 @@ status report. Revalidate them before choosing the next stage.
 
 On the next execution turn, run ./mva status --json and reconcile the private
 checkpoints with live process identities, including the one-off refresh receipt
-at work/private/runner/prioritise_refresh_state.json. Resume from the first
+at work/private/runner/prioritise_refresh_state.json and the continuation queue
+at work/private/runner/resume_after_refresh_state.json. Let the verified live
+queue perform the full resumption; if it stopped, investigate its category and
+ownership before taking over. Resume from the first
 incomplete or invalid stage after both jobs finish; do not restart a healthy
 process based on historical status above. Finish remaining recovery/acceptance tests, raw-read validation, local
 Track 2 synthesis, and packaging as their prerequisites become ready. Publish
