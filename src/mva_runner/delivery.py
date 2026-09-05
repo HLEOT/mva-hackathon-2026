@@ -11,6 +11,7 @@ from mva_track1.submission import _candidate_rows, build_submission, reviewed_fi
 from mva_track2.analysis import evidence_index, validate_hypothesis
 from .official import ROOT as OFFICIAL, prepare as prepare_official
 from .pitch import build_pitch, make_slides
+from .publication import verify_release
 from .render import inspect_pdf, markdown_to_pdf
 from .storage import EXECUTION, require_space, snapshot
 from .supervisor import read_state
@@ -65,7 +66,7 @@ def methods_answers(username: str, disclosure: str, runtime: str, track2: dict) 
             7: username, 8: method2, 9: disclosure, 10: 'Automated public evidence collection followed by local model synthesis, deterministic checks and local critique.',
             11: 'No human expert clinical curation was performed. Automated critiques are not independent experimental validation.',
             12: 'Public drug/target and literature resources, joined locally to the authorised gated challenge analysis.', 13: public, 14: private,
-            15: 'Only supplied predicted truncating or essential-splice consequences support a predicted loss-of-function category. Missense alone does not establish direction. Unknown mechanism remains unknown and fails the retention gate. No mechanism is claimed experimentally confirmed.',
+            15: 'A predicted loss-of-function category requires a supplied truncating or essential-splice consequence; missense alone does not establish direction. Literature-supported allele mechanisms additionally require exact source quotes matching the supplied HGVS identity, primary functional evidence and local critique of assay controls and interpretation. Unknown mechanism fails retention. No new experimental or independent human validation was performed.',
             16: runtime, 17: method2 + ' ' + track2['conclusion'] + ' Strengths are traceable evidence and falsifiable experiments. Limitations include bounded searches, abstract-level literature access, incomplete mechanism knowledge, jurisdiction/formulation-specific approval and no demonstrated clinical efficacy.'}}
 
 
@@ -123,6 +124,7 @@ def package() -> None:
         atomic_write_json(identity, {'hf_username': username, 'github_url': github})
     _assert_package_readiness(verify_large_hashes=True)
     prepare_official()
+    release = verify_release(cfg['delivery']['github_repository'])
     disclosure, missing = ai_disclosure()
     OUTPUT.mkdir(exist_ok=True)
     candidates_path = TRACK1 / 'candidates_ranked.tsv'
@@ -175,7 +177,8 @@ def package() -> None:
     checklist = OUTPUT / 'HANDOFF.md'
     atomic_write_text(checklist, '# Submission handoff\n\n'
         '- [ ] Verify hosted AI plan and data-handling disclosure before submission.\n'
-        '- [ ] Verify the audited public code release and repository URL.\n'
+        f"- [x] Audited public code release verified at commit `{release['commit']}`.\n"
+        '- [ ] Confirm the final release passed tests in a clean Python environment.\n'
         '- [ ] Review the local research outputs; unresolved mechanism or phase is not confirmation.\n'
         '- [ ] Upload the pitch to YouTube or Vimeo and retain its URL.\n'
         '- [ ] Submit the username-labelled CSV/report and methods workbooks through the official challenge UI.\n'
@@ -190,7 +193,10 @@ def package() -> None:
         'scientific_manifest_sha256': sha256_file(TRACK1 / 'final_run_manifest.json'),
         'track2_manifest_sha256': sha256_file(TRACK1 / 'track2/hypotheses.json'),
         'official_requirements_sha256': sha256_file(OFFICIAL / 'manifest.json'),
-        'external_handoff': ['challenge_submission', 'video_hosting'], 'publication_verified': False}
+        'external_handoff': ['challenge_submission', 'video_hosting'], 'publication_verified': True,
+        'public_code_commit': release['commit'], 'public_code_tree': release['tree'],
+        'public_code_receipt_sha256': sha256_file(PROJECT_ROOT / 'work/private/runner/code_release_verified.json'),
+        'dataset_citation_status': 'provisional_project_reference; no formal citation located on the inspected Synapse wiki'}
     atomic_write_json(OUTPUT / 'delivery_manifest.json', manifest)
     if missing:
         raise Track1Error('Local draft bundle built; hosted AI plan/data setting still requires user confirmation')

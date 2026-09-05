@@ -50,6 +50,12 @@ def _allele_observation(alignment: Any, chrom: str, pos: int, ref: str, alt: str
     baseqs: list[int] = []
     alt_fragments: set[str] = set()
     ref_fragments: set[str] = set()
+    ref, alt = ref.upper(), alt.upper()
+    sequence_alleles = bool(ref and alt) and set(ref + alt) <= set("ACGT")
+    snv = sequence_alleles and len(ref) == len(alt) == 1
+    insertion = sequence_alleles and len(ref) == 1 and len(alt) > 1 and alt.startswith(ref)
+    deletion = sequence_alleles and len(alt) == 1 and len(ref) > 1 and ref.startswith(alt)
+    supported_representation = snv or insertion or deletion
     try:
         columns = alignment.pileup(chrom, pos - 1, pos, truncate=True, stepper="samtools", min_base_quality=0)
         for column in columns:
@@ -73,19 +79,24 @@ def _allele_observation(alignment: Any, chrom: str, pos: int, ref: str, alt: str
                 baseqs.append(base_quality)
                 supports_alt = False
                 supports_ref = False
-                if len(ref) == len(alt) == 1:
+                if snv:
                     base = read.query_sequence[query_pos].upper()
                     supports_alt = base == alt.upper()
                     supports_ref = base == ref.upper()
-                elif len(alt) > len(ref) and alt.upper().startswith(ref.upper()):
+                elif insertion:
                     inserted = alt[len(ref):].upper()
                     observed = read.query_sequence[query_pos + 1: query_pos + 1 + len(inserted)].upper()
-                    supports_alt = pileup_read.indel == len(inserted) and observed == inserted
-                    supports_ref = pileup_read.indel == 0
-                elif len(ref) > len(alt) and ref.upper().startswith(alt.upper()):
+                    inserted_qualities = qualities[query_pos + 1:query_pos + 1 + len(inserted)]
+                    anchor_matches = read.query_sequence[query_pos].upper() == ref
+                    supports_alt = (anchor_matches and pileup_read.indel == len(inserted) and observed == inserted
+                                    and len(inserted_qualities) == len(inserted)
+                                    and all(q >= min_bq for q in inserted_qualities))
+                    supports_ref = anchor_matches and pileup_read.indel == 0
+                elif deletion:
                     deleted = len(ref) - len(alt)
-                    supports_alt = pileup_read.indel == -deleted
-                    supports_ref = pileup_read.indel == 0
+                    anchor_matches = read.query_sequence[query_pos].upper() == alt
+                    supports_alt = anchor_matches and pileup_read.indel == -deleted
+                    supports_ref = anchor_matches and pileup_read.indel == 0
                 if supports_alt:
                     alt_count += 1
                     alt_fragments.add(str(getattr(read, "query_name", id(read))))
@@ -101,12 +112,10 @@ def _allele_observation(alignment: Any, chrom: str, pos: int, ref: str, alt: str
     mean_mq = statistics.fmean(mapqs) if mapqs else 0.0
     mean_bq = statistics.fmean(baseqs) if baseqs else 0.0
     vaf = alt_count / depth if depth else 0.0
-    supported_representation = (len(ref) == len(alt) == 1 or
-        (len(ref) == 1 and len(alt) > 1 and alt.upper().startswith(ref.upper())) or
-        (len(alt) == 1 and len(ref) > 1 and ref.upper().startswith(alt.upper())))
     if not supported_representation:
         # Complex replacements/MNVs require haplotype-aware local realignment.
         # An unimplemented representation is not evidence of an absent allele.
+        # They also contribute no fragment calls to direct phase inference.
         support = "ambiguous"
     elif (
         depth >= int(cfg["min_depth"])
@@ -115,9 +124,12 @@ def _allele_observation(alignment: Any, chrom: str, pos: int, ref: str, alt: str
         and reverse >= 1
     ):
         support = "supported"
-    elif depth >= int(cfg["min_depth"]) and alt_count == 0:
+    elif snv and depth >= int(cfg["min_depth"]) and alt_count == 0:
         support = "unsupported"
     else:
+        # Equivalent indels can be aligned at different repeat positions.
+        # No exact pileup event is inconclusive without local realignment;
+        # do not eliminate an indel hypothesis solely on this representation.
         support = "ambiguous"
     return {
         "depth": depth,

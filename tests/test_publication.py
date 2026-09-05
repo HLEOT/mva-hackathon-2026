@@ -33,3 +33,36 @@ def test_payload_refuses_a_file_changed_after_the_audit(tmp_path, monkeypatch):
     monkeypatch.setattr(publication, 'audit', lambda root: report)
     with pytest.raises(Track1Error, match='changed after'):
         publication.payload(tmp_path)
+
+
+def public_release_fixture(monkeypatch, tmp_path):
+    report = {'file_count': 1, 'files': {'README.md': {'git_blob_sha': git_blob_sha(b'synthetic'), 'mode': '100644'}}}
+    monkeypatch.setattr(publication, 'audit', lambda root: report)
+    head, tree = 'a' * 40, 'b' * 40
+    responses = {'': {'full_name': 'example/synthetic', 'private': False},
+        '/git/ref/heads/main': {'object': {'sha': head}}, '/git/commits/' + head: {'tree': {'sha': tree}},
+        '/git/trees/' + tree + '?recursive=1': {'truncated': False,
+            'tree': [{'path': 'README.md', 'type': 'blob', **report['files']['README.md'],
+                      'sha': report['files']['README.md']['git_blob_sha']}]}}
+    monkeypatch.setattr(publication, '_github_json', lambda url: responses[url.removeprefix('https://api.github.com/repos/example/synthetic')])
+    return responses
+
+
+def test_live_release_receipt_requires_audited_remote_tree(monkeypatch, tmp_path):
+    public_release_fixture(monkeypatch, tmp_path)
+    receipt = publication.verify_release('example/synthetic', tmp_path)
+    assert receipt['verified'] and receipt['commit'] == 'a' * 40
+    assert (tmp_path / 'work/private/runner/code_release_verified.json').is_file()
+
+
+@pytest.mark.parametrize('failure', ['private_repository', 'different_repository', 'truncated_tree', 'wrong_blob'])
+def test_live_release_rejects_wrong_destination_or_content(monkeypatch, tmp_path, failure):
+    responses = public_release_fixture(monkeypatch, tmp_path)
+    if failure == 'private_repository': responses['']['private'] = True
+    if failure == 'different_repository': responses['']['full_name'] = 'different/repository'
+    remote = responses['/git/trees/' + 'b' * 40 + '?recursive=1']
+    if failure == 'truncated_tree': remote['truncated'] = True
+    if failure == 'wrong_blob': remote['tree'][0]['sha'] = 'c' * 40
+    with pytest.raises(Track1Error):
+        publication.verify_release('example/synthetic', tmp_path)
+    assert not (tmp_path / 'work/private/runner/code_release_verified.json').exists()

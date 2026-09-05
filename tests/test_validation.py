@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import pytest
 
 from mva_track1.validation import (
     _allele_observation,
@@ -49,6 +50,36 @@ def test_supported_snv_requires_depth_alt_count_and_both_strands() -> None:
     assert result["depth"] == 10
     assert result["alt_reads"] == 6
     assert result["vaf"] == 0.6
+
+
+@pytest.mark.parametrize("ref,alt", [("AA", "TT"), ("AT", "ATG"), ("ATG", "AT"), ("A", "<DEL>"), ("A", "*"), ("N", "A")])
+def test_complex_or_symbolic_alleles_are_ambiguous_and_do_not_phase(ref, alt):
+    result = _allele_observation(FakeAlignment(), "chr15", 100, ref, alt,
+        {"min_depth": 10, "min_alt_reads": 3, "min_mapping_quality": 20, "min_base_quality": 20})
+    assert result["support"] == "ambiguous"
+    assert result["alt_reads"] == result["ref_reads"] == 0
+    assert not result["alt_fragments"] and not result["ref_fragments"]
+
+
+@pytest.mark.parametrize("ref,alt", [("A", "AG"), ("AG", "A")])
+def test_missing_exact_indel_event_does_not_prove_absence(ref, alt):
+    result = _allele_observation(FakeAlignment(), "chr15", 100, ref, alt,
+        {"min_depth": 10, "min_alt_reads": 3, "min_mapping_quality": 20, "min_base_quality": 20})
+    assert result["depth"] == 10 and result["alt_reads"] == 0
+    assert result["support"] == "ambiguous"
+
+
+@pytest.mark.parametrize("anchor,inserted_quality,expected", [("A", 35, "supported"), ("C", 35, "ambiguous"), ("A", 5, "ambiguous")])
+def test_insertion_requires_matching_anchor_and_inserted_base_quality(anchor, inserted_quality, expected):
+    reads = [SimpleNamespace(alignment=SimpleNamespace(is_unmapped=False, is_secondary=False,
+        is_supplementary=False, is_duplicate=False, mapping_quality=60, query_qualities=[35, inserted_quality],
+        query_sequence=anchor + "G", is_reverse=index % 2 == 1, query_name=f"synthetic{index}"),
+        is_refskip=False, query_position=0, indel=1) for index in range(10)]
+    alignment = SimpleNamespace(pileup=lambda *args, **kwargs: [SimpleNamespace(reference_pos=99, pileups=reads)])
+    result = _allele_observation(alignment, "chr15", 100, "A", "AG",
+        {"min_depth": 10, "min_alt_reads": 3, "min_mapping_quality": 20, "min_base_quality": 20})
+    assert result["support"] == expected
+    assert result["alt_reads"] == (10 if expected == "supported" else 0)
 
 
 def test_read_linkage_can_support_trans_configuration() -> None:

@@ -13,6 +13,18 @@ from mva_track1.common import PROJECT_ROOT, Track1Error, atomic_write_json, load
 from .sources import ROOT, fetch, payload
 
 
+# Explicit identities documented in the FDA originator application records.
+# Never strip arbitrary salt suffixes or use substring matches: that could
+# merge different active substances or approve a fixed-dose combination as a
+# single-agent intervention. Approval history is not current availability.
+FDA_SALT_IDENTITIES = {
+    "metformin": {"ingredient": "metformin hydrochloride",
+        "source_url": "https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=020357"},
+    "pravastatin": {"ingredient": "pravastatin sodium",
+        "source_url": "https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=019898"},
+}
+
+
 def abstracts(xml: str) -> list[dict]:
     if not xml:
         return []
@@ -30,19 +42,34 @@ def abstracts(xml: str) -> list[dict]:
 
 
 def approved_applications(records: list, drug: str) -> list[dict]:
-    """Require exact ingredient identity and an actual original approval event."""
+    """Require a traceable single-ingredient product and original approval."""
     approvals = []
+    name = drug.strip().casefold()
+    salt = FDA_SALT_IDENTITIES.get(name)
+    accepted = {name} | ({salt["ingredient"]} if salt else set())
     for record in records:
-        ingredients = {ingredient.get("name", "").lower() for product in record.get("products", [])
-                       for ingredient in product.get("active_ingredients", [])}
-        if drug.lower() not in ingredients:
+        products = []
+        for product in record.get("products", []):
+            ingredients = product.get("active_ingredients", [])
+            if len(ingredients) != 1:
+                continue
+            ingredient = ingredients[0].get("name", "").strip().casefold()
+            if ingredient not in accepted:
+                continue
+            products.append({key: product.get(key) for key in ["product_number", "brand_name",
+                "active_ingredients", "dosage_form", "route", "marketing_status"]} | {
+                "identity_match": "exact_name" if ingredient == name else "explicit_salt_identity",
+                "identity_source_url": salt["source_url"] if ingredient != name else None})
+        if not products:
             continue
         events = [s for s in record.get("submissions", [])
                   if s.get("submission_status") == "AP" and s.get("submission_type") == "ORIG"]
         number = record.get("application_number", "")
         if events and re.fullmatch(r"(?:NDA|ANDA|BLA)\d+", number):
             approvals.append({"application_number": number, "jurisdiction": "United States FDA",
-                "events": events, "url": "https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=" + re.sub(r"\D", "", number)})
+                "events": events, "matched_single_ingredient_products": products,
+                "approval_scope": "historical original approval; not MVA approval or current market availability",
+                "url": "https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=" + re.sub(r"\D", "", number)})
     return approvals
 
 

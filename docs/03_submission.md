@@ -36,7 +36,10 @@ disclosure leaves the bundle a draft and prevents final acceptance. Distinguish
 hosted code assistance from local Qwen analysis of private data.
 
 Use the official methods workbook and current challenge instructions, retaining
-retrieval dates, revisions and hashes. Recheck mutable rules and the authoritative
+retrieval dates, revisions and hashes. Packaging compares cached bytes with the
+upstream Git/LFS digests and checks whether selected rules or templates changed
+at the current Space head; changes require review rather than silent repinning.
+Recheck mutable rules and the authoritative
 Synapse dataset citation before final publication/submission. Do not invent a
 DOI, account setting, approval, human reviewer or completed check.
 
@@ -49,6 +52,12 @@ visual fixtures may be shown to a hosted coding agent.
 
 Local completion requires both real analyses, validated materials and a verified
 public code release reproducible on synthetic fixtures from a clean environment.
+Packaging verifies the live public GitHub tree against the current privacy-audited
+paths, bytes and executable modes, then records the exact commit. This check does
+not substitute for the separate clean-environment test. FDA identity checks retain
+single-ingredient product and historical original-approval records, with explicit
+source-linked salt mappings; neither labels alone nor combination products prove
+single-agent approval, and approval history is not current availability or MVA efficacy.
 An automated review does not establish clinical causality or treatment efficacy.
 An unresolved phase or mechanism must remain explicitly unresolved.
 

@@ -125,6 +125,52 @@ def verify_tree(tree: list[dict], report: dict) -> None:
             raise Track1Error('Remote release content or executable mode differs from the audited snapshot')
 
 
+def _github_json(url: str) -> dict:
+    """Read public release metadata without credentials or private parameters."""
+    import requests
+    response = requests.get(url, headers={'Accept': 'application/vnd.github+json',
+        'User-Agent': 'mva-code-release-verifier'}, timeout=(10, 30), allow_redirects=False)
+    response.raise_for_status()
+    if response.status_code != 200:
+        raise Track1Error('Unexpected response from the public release endpoint')
+    return response.json()
+
+
+def verify_release(repository: str, root: Path = PROJECT_ROOT) -> dict:
+    """Verify the live public tree against audited code, without external writes.
+
+    This verifies publication, not scientific completion or clean-environment
+    reproduction. Preserve that distinction in the delivery manifest.
+    """
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
+        raise Track1Error('Invalid public code repository identifier')
+    report = audit(root)
+    base = 'https://api.github.com/repos/' + repository
+    repo = _github_json(base)
+    if repo.get('full_name') != repository or repo.get('private') is not False:
+        raise Track1Error('Public code destination identity or visibility differs')
+    head = _github_json(base + '/git/ref/heads/main')['object']['sha']
+    if not re.fullmatch(r'[0-9a-f]{40}', head):
+        raise Track1Error('Invalid public release commit identifier')
+    commit = _github_json(base + '/git/commits/' + head)
+    tree_sha = commit['tree']['sha']
+    if not re.fullmatch(r'[0-9a-f]{40}', tree_sha):
+        raise Track1Error('Invalid public release tree identifier')
+    remote = _github_json(base + '/git/trees/' + tree_sha + '?recursive=1')
+    if remote.get('truncated') is not False:
+        raise Track1Error('Public code tree was not returned completely')
+    verify_tree(remote['tree'], report)
+    if _github_json(base + '/git/ref/heads/main')['object']['sha'] != head:
+        raise Track1Error('Public branch changed during verification; retry against the new head')
+    if audit(root)['files'] != report['files']:
+        raise Track1Error('Local code changed during public release verification')
+    receipt = {'verified_at': utc_now(), 'repository': repository, 'commit': head,
+               'tree': tree_sha, 'verified': True, 'file_count': report['file_count'],
+               'files': report['files']}
+    atomic_write_json(root / 'work/private/runner/code_release_verified.json', receipt)
+    return receipt
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()

@@ -430,6 +430,13 @@ status report. Revalidate them before choosing the next stage.
 - Implementation verification: 198 synthetic tests passed after bounded
   authentication preflight and separation of provenance refresh from expensive
   read-validation checkpoints. All five scientific environments are ready.
+- Implementation verification: 223 synthetic tests passed after upstream
+  template integrity/freshness checks, live code-release verification,
+  source-linked FDA salt identities with combination-product exclusion, and
+  conservative complex-allele/indel read support. These tests do not substitute
+  for the pending real read analysis. Insertions require a matching anchor and
+  adequate inserted-base qualities; unmodelled representations cannot create
+  direct fragment-phase evidence, and unmatched indels remain inconclusive.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -455,6 +462,17 @@ status report. Revalidate them before choosing the next stage.
   tests passed in a new Python virtual environment with no system-site-packages;
   dependency checks passed. This uses host Poppler/fonts, not a clean OS image.
   Later changes require their own publication and reproduction verification.
+- Code checkpoint `3f65233` added preflight and provenance isolation. All 97
+  remote files/modes matched the privacy audit, the original staged index was
+  unchanged, and 198 tests passed in the same isolated reproduction environment
+  after updating its public checkout. Generated editable-install metadata was
+  preserved rather than discarded.
+- At 18:38 UTC, all seven official source/template files matched their upstream
+  Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
+  the live head had no selected-source changes. The public Synapse wiki tree
+  contained only the inspected landing wiki (last modified 2026-08-24), with no
+  citation/DOI reference found. The project-level citation remains provisional;
+  no formal reference or DOI has been invented.
 - Live execution check at 18:24 UTC: the read-download supervisor and child
   were verified alive; additional storage was 76.88 GB of the 250 GB allowance.
   A separate private controller was then started for the required prioritisation
@@ -469,7 +487,9 @@ status report. Revalidate them before choosing the next stage.
   branch before each incremental upload and record the verified release commit.
 - The user has been asked asynchronously for the hosted coding account's plan
   and data-sharing setting, required for an accurate methods disclosure.
-- The official dataset citation must be resolved from the current Synapse page.
+- A formal dataset citation was not located on the current Synapse page or its
+  wiki tree. The local report uses an explicitly provisional project reference;
+  obtain organiser confirmation before claiming full citation compliance.
 - Estimate and monitor peak additional disk usage before large downloads or
   alignment; ask if the approved 250 GB allowance is insufficient.
 

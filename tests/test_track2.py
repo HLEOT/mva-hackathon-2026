@@ -10,6 +10,37 @@ def test_search_or_label_alone_is_not_regulatory_approval():
     assert not approved_applications([record], "different")
 
 
+def test_documented_salt_identity_retains_product_and_provenance():
+    for drug, ingredient in [("metformin", "METFORMIN HYDROCHLORIDE"), ("pravastatin", "PRAVASTATIN SODIUM")]:
+        record = {"application_number": "NDA123456", "products": [{"product_number": "001",
+            "marketing_status": "Discontinued", "active_ingredients": [{"name": ingredient}]}],
+            "submissions": [{"submission_type": "ORIG", "submission_status": "AP"}]}
+        approval = approved_applications([record], drug)[0]
+        product = approval["matched_single_ingredient_products"][0]
+        assert product["identity_match"] == "explicit_salt_identity"
+        assert product["identity_source_url"].startswith("https://www.accessdata.fda.gov/")
+        assert product["marketing_status"] == "Discontinued"
+        assert "not MVA approval or current market availability" in approval["approval_scope"]
+
+
+def test_arbitrary_salts_substrings_and_combinations_do_not_match():
+    for ingredients in [["METFORMIN SODIUM"], ["SYNTHETIC METFORMIN HYDROCHLORIDE"],
+                        ["METFORMIN HYDROCHLORIDE", "EMPAGLIFLOZIN"],
+                        ["EMPAGLIFLOZIN, METFORMIN HYDROCHLORIDE"]]:
+        record = {"application_number": "NDA123456", "products": [{"active_ingredients":
+            [{"name": name} for name in ingredients]}],
+            "submissions": [{"submission_type": "ORIG", "submission_status": "AP"}]}
+        assert not approved_applications([record], "metformin")
+
+
+def test_tentative_or_supplemental_approval_does_not_pass_salt_match():
+    record = {"application_number": "NDA123456", "products": [{"active_ingredients":
+        [{"name": "METFORMIN HYDROCHLORIDE"}]}], "submissions": [
+        {"submission_type": "ORIG", "submission_status": "TA"},
+        {"submission_type": "SUPPL", "submission_status": "AP"}]}
+    assert not approved_applications([record], "metformin")
+
+
 def test_abstract_parser_retains_public_id_and_study_type():
     xml = '<PubmedArticleSet><PubmedArticle><MedlineCitation><PMID>123456</PMID><Article><ArticleTitle>Synthetic title</ArticleTitle><Abstract><AbstractText>Experimental evidence.</AbstractText></Abstract><PublicationTypeList><PublicationType>Journal Article</PublicationType></PublicationTypeList></Article></MedlineCitation></PubmedArticle></PubmedArticleSet>'
     record = abstracts(xml)[0]
