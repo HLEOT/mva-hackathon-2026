@@ -24,4 +24,9 @@ progress, decisions, verification results, and next action current.
 - Preserve uncertainty. Never invent human review, phase, approval, evidence,
   or successful checks.
 
-Run tests with `.conda/launcher/bin/python -m pytest -q`.
+Keep synthetic test scratch inside the project too. Run tests with:
+
+```bash
+mkdir -p -m 700 work/private/tmp
+TMPDIR="$PWD/work/private/tmp" .conda/launcher/bin/python -m pytest -q
+```

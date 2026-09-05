@@ -107,6 +107,15 @@ limitations, followed by local critique. Missense, gene knockout, pathway
 proximity, or approval in another indication alone cannot establish the chain.
 An empty retained-hypothesis list is a valid, explicitly reported result.
 
+Raw-read QC is a separate screening layer. Packaging checks the exact FastQC
+report inventory against the supplied FASTQ names, pinned tool version, all
+default modules, archive CRCs and complete MultiQC HTML. Both track reports and
+the private delivery manifest retain WARN/FAIL counts; valid files do not imply
+that all modules passed. Composition flags do not establish their cause, and
+the workflow does not trim reads merely to remove a flag. Library preparation,
+detailed QC plots and candidate-level read evidence require separate review.
+QC reporting changes invalidate packaging, not the measured alignment.
+
 ## Persistence and privacy
 
 The supervisor owns a project lock and records PID plus process creation time.

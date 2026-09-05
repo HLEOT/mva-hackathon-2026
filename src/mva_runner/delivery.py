@@ -12,6 +12,7 @@ from mva_track2.analysis import evidence_index, validate_hypothesis
 from .official import ROOT as OFFICIAL, prepare as prepare_official
 from .pitch import build_pitch, make_slides
 from .publication import verify_release
+from .qc import read_fastqc_summary, report_section as qc_report_section
 from .render import inspect_pdf, markdown_to_pdf
 from .storage import EXECUTION, require_space, snapshot
 from .supervisor import read_state
@@ -45,7 +46,8 @@ def methods_answers(username: str, disclosure: str, runtime: str, track2: dict) 
         'are joined by allele and gene. Pinned HPO terms require exact local source anchors; conflicting or uncertain '
         'features are excluded from scoring. Candidate pairs use evidence for both alleles; same-locus and shared-block '
         'cis pairs are excluded. Genome-wide score ordering and the historical known-gene-prioritised comparator are retained. '
-        'Selected hypotheses undergo local automated review, streamed duplicate-marked CRAM alignment, and measured read/phase validation.')
+        'Selected hypotheses undergo local automated review, streamed duplicate-marked CRAM alignment, and measured read/phase validation. '
+        'FastQC/MultiQC screening flags are retained explicitly in both reports; artifact integrity is not an all-module PASS claim.')
     method2 = ('Fixed public queries collect ChEMBL mechanisms, Reactome checkpoint biology, PubMed abstracts, and FDA '
         'approval/label records before joining private results locally. Structured local-model outputs cite supplied source '
         'IDs and exact quotes. Deterministic gates require supported variant mechanism, compound identity, existing regulatory '
@@ -152,7 +154,11 @@ def package() -> None:
         'the immutable pre-read proposal and reassessment record retain that decision trail.\n\n'
         '## Actual AI use and data handling\n\n' + disclosure + '\n\n## Dataset citation\n\n' + DATASET_CITATION + '\n')
     track2_report(data, corpus, report2, github, disclosure)
-    checks, artifacts = {}, [submission, report1, report2]
+    raw_inputs = load_jsonish(PROJECT_ROOT / 'config/config.yaml')['huggingface']['fastq_files']
+    qc = read_fastqc_summary(PROJECT_ROOT / 'work/private/qc', raw_inputs)
+    for report in [report1, report2]:
+        atomic_write_text(report, report.read_text() + '\n' + qc_report_section(qc))
+    checks, artifacts = {'raw_read_qc': qc}, [submission, report1, report2]
     for report in [report1, report2]:
         pdf = report.with_suffix('.pdf')
         markdown_to_pdf(report, pdf)
@@ -180,6 +186,7 @@ def package() -> None:
         f"- [x] Audited public code release verified at commit `{release['commit']}`.\n"
         '- [ ] Confirm the final release passed tests in a clean Python environment.\n'
         '- [ ] Review the local research outputs; unresolved mechanism or phase is not confirmation.\n'
+        '- [ ] Review flagged FastQC modules and library preparation; QC flag causes have not been established.\n'
         '- [ ] Upload the pitch to YouTube or Vimeo and retain its URL.\n'
         '- [ ] Submit the username-labelled CSV/report and methods workbooks through the official challenge UI.\n'
         '- [ ] Recheck current rules, quotas, deadline and dataset citation before submission/publication.\n'

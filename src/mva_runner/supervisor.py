@@ -90,7 +90,7 @@ def stages(tracks: str = "both") -> list[Stage]:
         return [stage for stage in result if stage.name != "public_evidence"]
     dependencies = ("provenance", "track2")
     result.append(Stage("package", dependencies, ("config/execution.yaml", "config/ai_usage.local.yaml",
-                        "src/mva_runner/delivery.py", "src/mva_runner/official.py", "src/mva_runner/render.py",
+                        "src/mva_runner/delivery.py", "src/mva_runner/official.py", "src/mva_runner/render.py", "src/mva_runner/qc.py",
                         "src/mva_runner/workbooks.py", "src/mva_runner/pitch.py", "src/mva_runner/speech.py",
                         "src/mva_track1/report.py", "src/mva_track1/submission.py", "workflow/envs/delivery.yaml"),
                         ("submissions/delivery_manifest.json",), 1_000_000_000))

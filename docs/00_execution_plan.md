@@ -451,6 +451,14 @@ status report. Revalidate them before choosing the next stage.
   against unchanged evidence; each must pass the existing exact-match gate.
   Tests cover cross-record copying, repeated failure, schema failure and
   separation of transport retries. No evidence is silently repaired in code.
+- Implementation verification: 258 synthetic tests passed after adding
+  source-inventoried FastQC summaries and explicit QC caveats to both reports
+  and the private delivery manifest. Tests distinguish WARN/FAIL flags from
+  archive integrity, reject incomplete/mismatched reports, check PDF clipping,
+  and scope QC-report invalidation to packaging. Real report inventory and
+  integrity were checked locally; per-module results remain in private records.
+  Test scratch is explicitly project-local; this turn's three completed
+  legacy test directories were moved into that accounting without discarding files.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -560,6 +568,13 @@ status report. Revalidate them before choosing the next stage.
   obtain organiser confirmation before claiming full citation compliance.
 - Estimate and monitor peak additional disk usage before large downloads or
   alignment; ask if the approved 250 GB allowance is insufficient.
+- Measured sort-scratch growth now indicates that overlapping sorting phases
+  may exceed the initial estimate. Additional disk approval has been requested
+  for a possible 300–400 GB peak; this is a projection, not measured peak usage.
+  The approved 250 GB limit and its reserve remain unchanged unless the user
+  explicitly approves an increase. Do not restart the healthy alignment merely
+  because approval is pending; the existing resource guard remains responsible
+  for pausing before its authorised allowance is exceeded.
 
 ### Exact next action
 
