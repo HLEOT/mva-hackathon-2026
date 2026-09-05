@@ -19,7 +19,8 @@ def limits_valid(limits: dict) -> bool:
     if any(isinstance(value, bool) or not isinstance(value, int) for value in values):
         return False
     cpus, memory, disk, reserve = values
-    return 1 <= cpus <= 112 and 1 <= memory <= 400 and 0 < disk <= 250_000_000_000 and 0 <= reserve < disk
+    # The user explicitly raised only the additional-disk allowance on 2026-09-05.
+    return 1 <= cpus <= 112 and 1 <= memory <= 400 and 0 < disk <= 400_000_000_000 and 0 <= reserve < disk
 
 
 def probe_gated_file(dataset: dict, token: str, revision: str) -> bool:

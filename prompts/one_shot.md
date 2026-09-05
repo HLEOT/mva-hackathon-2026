@@ -28,7 +28,7 @@ unrelated staged files, secrets, source data, or patient-derived artifacts.
 Use clear comments for a bioinformatician and the ordered file structure in
 this plan. Work through the milestones without asking whether to continue.
 Use up to 112 CPUs, 400 GiB RAM, and the available GPU, with no paid cloud
-services. Enforce a combined limit of 250 GB additional disk usage beyond the
+services. Enforce a combined limit of 400 GB additional disk usage beyond the
 existing project footprint. Ask before exceeding that allowance.
 
 Keep private interpretation local. Record automated reviews honestly, preserve

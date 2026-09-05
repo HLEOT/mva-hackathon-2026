@@ -6,7 +6,8 @@ progress, decisions, verification results, and next action current.
 - Complete both tracks and the real analysis; synthetic tests alone are not completion.
 - Preserve existing staged work and validated resources.
 - Use at most 112 CPUs and 400 GiB RAM. The additional disk allowance is
-  250,000,000,000 bytes beyond the recorded baseline. Ask before exceeding it.
+  400,000,000,000 bytes beyond the recorded baseline, explicitly approved on
+  2026-09-05. Ask before exceeding it; do not reset the baseline.
 - Keep task downloads, caches, environments, and scratch files in this project.
 - Never print private phenotype, genotype, variant, or local model content to
   a hosted agent. Inspect it with local code and expose only technical status,

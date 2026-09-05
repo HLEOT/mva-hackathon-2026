@@ -63,9 +63,9 @@ the verified local speech runtime is recorded separately. A clean Python
 environment alone does not supply these operating-system tools.
 
 - Use no more than 112 CPUs and 400 GiB RAM across concurrent work.
-- The additional allowance is 250,000,000,000 decimal bytes, not free space on
-  the host and not 250 GiB. The stored baseline must never be increased to
-  conceal task growth.
+- The additional allowance is 400,000,000,000 decimal bytes, explicitly approved
+  on 2026-09-05, not free space on the host and not 400 GiB. The stored baseline
+  must never be increased to conceal task growth.
 - A 10,000,000,000-byte reserve covers in-flight writes during a clean stop.
 - Include partial downloads, environments, model weights, caches, extraction
   overlap, sort buffers and outputs in stage estimates.
@@ -84,13 +84,19 @@ overlap as well as the final CRAM; the behaviour is visible in the pinned
 [samtools 1.22 sorting implementation](https://github.com/samtools/samtools/blob/1.22/bam_sort.c).
 
 For the current already-running alignment, a private one-off watcher in tmux
-session `mva-budget-watch` preserves process memory if storage becomes tight.
+session `mva-budget-watch-400gb` preserves process memory if storage becomes tight.
 Its receipt is `work/private/runner/alignment_budget_watch_state.json`; verify
 its controller PID/start-time as well as the recorded stage owner. It pauses
 only that validated session/process group when remaining headroom reaches
-20 GB, ahead of the main supervisor's 10 GB reserve. It never raises the 250 GB
+20 GB, ahead of the main supervisor's 10 GB reserve. It never raises the 400 GB
 allowance, rewrites main supervisor state, deletes files or resumes automatically.
 This is a live-run recovery aid, not a requirement for a fresh public checkout.
+The initial 250 GB watcher was retained until the explicit 400 GB approval.
+It was then replaced after identity checks, and the same alignment group was
+continued without a restart. The original pause remains recorded in
+`work/private/runner/paused_alignment_checkpoint.json`; approval and replacement
+details are in `work/private/runner/disk_allowance_400gb_approval.json`. The
+current watch receipt tracks the replacement controller, not the retired one.
 
 If that receipt reports a verified pause, do not start another supervisor.
 After an explicit storage decision, reconcile the approved contract and

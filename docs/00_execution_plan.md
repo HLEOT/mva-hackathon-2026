@@ -44,7 +44,7 @@ unrelated staged files, secrets, source data, or patient-derived artifacts.
 Use clear comments for a bioinformatician and the ordered file structure in
 this plan. Work through the milestones without asking whether to continue.
 Use up to 112 CPUs, 400 GiB RAM, and the available GPU, with no paid cloud
-services. Enforce a combined limit of 250 GB additional disk usage beyond the
+services. Enforce a combined limit of 400 GB additional disk usage beyond the
 existing project footprint. Ask before exceeding that allowance.
 
 Keep private interpretation local. Record automated reviews honestly, preserve
@@ -80,7 +80,7 @@ test with a confirmed causal variant or an effective treatment.
 | CPU limit | Up to 112 CPUs, accounting for concurrent processes |
 | RAM limit | Up to 400 GiB, accounting for concurrent processes |
 | GPU | Use the available local GPU where useful |
-| Additional disk | At most 250 GB beyond the existing footprint; ask before exceeding it |
+| Additional disk | At most 400 GB beyond the existing footprint, explicitly approved on 2026-09-05; ask before exceeding it |
 | Paid infrastructure | No paid cloud compute or paid APIs |
 | Interpretation | Deterministic checks plus a local model; explicitly automated reviews |
 | Pitch | Locally generated slides, timed script, synthetic narration, and MP4 |
@@ -90,7 +90,7 @@ test with a confirmed causal variant or an effective treatment.
 | Commit cadence | Small, focused, audited commits as coherent changes are ready; no bulk-commit requirement |
 | External handoff | Challenge submission and video hosting are not automatic |
 
-The disk allowance is decimal: **250,000,000,000 additional bytes**. It includes
+The disk allowance is decimal: **400,000,000,000 additional bytes**. It includes
 new downloads, environments, model weights, caches, temporary files, private
 results, and delivery artifacts. Record a baseline before implementation and
 account for task-created storage outside the project too. Do not evade the
@@ -404,8 +404,13 @@ a large job is still running or because a synthetic test suite passes.
 
 - 2026-09-05: Use the existing project as the baseline and extend it to both
   tracks; preserve staged code and valid downloaded resources.
-- 2026-09-05: Use maximum practical local compute with a hard allowance of
+- 2026-09-05: Initially use maximum practical local compute with a hard allowance of
   250 GB additional disk usage; ask before exceeding it.
+- 2026-09-05: After the live alignment was preserved at its storage boundary,
+  the user explicitly approved increasing additional disk to 400 GB and resuming
+  that same job. Keep the original baseline, 112-CPU limit, 400-GiB RAM limit,
+  scientific inputs and storage reserves unchanged. Record and verify the
+  identity-checked resumption separately; approval alone is not proof of progress.
 - 2026-09-05: Use deterministic checks plus local inference and generate a
   narrated pitch locally.
 - 2026-09-05: Create `HLEOT/mva-hackathon-2026` and upload code, not the large
@@ -463,6 +468,10 @@ status report. Revalidate them before choosing the next stage.
   PID/start-time-checked `child_paused` and `paused_stages` status fields.
   Sleeping, OS-paused, stale and disappearing processes remain distinct;
   status output does not disclose raw worker records or signal any process.
+- Implementation verification: 268 synthetic tests passed after applying the
+  explicitly approved 400 GB additional-disk ceiling. Tests accept smaller
+  allowances and the exact ceiling, reject one byte above it and invalid
+  reserves, and retain the original CPU and RAM authorization boundaries.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -511,6 +520,9 @@ status report. Revalidate them before choosing the next stage.
   files/modes matched the public tree and isolated checkout; all 258 tests and
   the dependency check passed there. A transient post-update tree mismatch
   was rechecked before verification was recorded; the original index was preserved.
+- Code checkpoint `0f79dc3` published truthful paused-worker status. All 106
+  files/modes matched the public tree and isolated checkout; 263 tests and the
+  dependency check passed there. The original staged index was preserved.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -577,8 +589,18 @@ status report. Revalidate them before choosing the next stage.
   memory and temporary files remain intact; no scientific files were deleted.
   The live-pause receipt and scientific-input snapshot are in
   work/private/runner/paused_alignment_checkpoint.json. This is not a durable
-  completed alignment or a successful read-validation result. Resumption now
-  requires the storage decision and revalidation of the same live identities.
+  completed alignment or a successful read-validation result. Resumption
+  required the storage decision and revalidation of the same live identities.
+- At 22:57 UTC, following explicit user approval of 400 GB additional disk,
+  the existing alignment group was continued without restarting it. All 42
+  saved scientific inputs matched, the execution configuration changed only
+  in its disk allowance, and the original baseline was unchanged. The old
+  watcher was stopped by its verified identity and replaced in tmux session
+  `mva-budget-watch-400gb` before continuation. At 22:58 UTC, the same worker
+  and supervisor were live, the replacement watcher was monitoring, and CPU
+  counters proved resumed computation. Additional allocated storage was
+  236.11 GB. Receipts remain under work/private/runner; this is not completion
+  of alignment, read validation, Track 2 or delivery.
 
 ### Blockers and prerequisites
 
@@ -591,14 +613,12 @@ status report. Revalidate them before choosing the next stage.
   wiki tree. The local report uses an explicitly provisional project reference;
   obtain organiser confirmation before claiming full citation compliance.
 - Estimate and monitor peak additional disk usage before large downloads or
-  alignment; ask if the approved 250 GB allowance is insufficient.
-- Measured sort-scratch growth now indicates that overlapping sorting phases
-  may exceed the initial estimate. Additional disk approval has been requested
-  for a possible 300–400 GB peak; this is a projection, not measured peak usage.
-  The approved 250 GB limit and its reserve remain unchanged unless the user
-  explicitly approves an increase. Do not restart the healthy alignment merely
-  because approval is pending; the existing resource guard remains responsible
-  for pausing before its authorised allowance is exceeded.
+  alignment; ask if the newly approved 400 GB allowance is insufficient.
+- The user approved 400 GB additional disk after overlapping sort scratch
+  reached the previous allowance's pause threshold. The 300–400 GB peak estimate
+  remains a projection, not a guarantee. Preserve the original baseline and
+  reserves. The same worker has resumed with a verified replacement watcher;
+  continue monitoring its live identity and remaining headroom.
 
 ### Exact next action
 
@@ -606,13 +626,14 @@ On the next execution turn, run ./mva status --json and reconcile the private
 checkpoints with live process identities. The auxiliary refresh has completed
 and the one-shot continuation queue has already launched and exited; their
 receipts under work/private/runner are historical prerequisites, not new jobs
-to start. The last verified read-validation worker is OS-paused for the storage
-decision; finalist review has passed, but measured read support and phase remain
-pending. If the
-budget watcher reports a pause, verify its actual live controller and saved
-worker/group identities; do not launch a duplicate or resume without resolving
-the storage decision. Check `paused_stages` as well as live PIDs. If the
-runner stops, inspect only sanitised categories and local
+to start. The last verified read-validation worker has resumed under the
+explicitly approved 400 GB additional-disk allowance. Its replacement watcher
+is in tmux session `mva-budget-watch-400gb`; the original alignment was not
+restarted. Finalist review has passed, but measured read support and phase
+remain pending. If the budget watcher reports another pause, verify its actual
+live controller and saved worker/group identities; do not launch a duplicate
+or exceed 400 GB without new authority. Check `paused_stages` as well as live
+PIDs. If the runner stops, inspect only sanitised categories and local
 validators, then resume the first invalid or incomplete stage after resolving
 the cause. Do not restart healthy workers or weaken scientific evidence gates.
 Finish raw-read validation, local Track 2 synthesis, and packaging as their
@@ -628,8 +649,9 @@ are implemented. The immutable baseline is 184,345,051,136 bytes. The original
 and immutable pre-read proposals prevent full BAM overlap and unnecessary
 realignment when the shortlist changes. Real phenotype review, source-checked
 finalist review and public evidence acquisition are complete. Raw-read QC
-reports have been integrity-checked; alignment is paused with its live state
-retained pending storage authority. A tested, code-only checkpoint is public.
+reports have been integrity-checked; the preserved alignment has resumed under
+the approved 400 GB additional-disk allowance with its original inputs and
+process identities. A tested, code-only checkpoint is public.
 Full real analyses, final deliverables, remaining recovery/acceptance tests and
 final code-release verification are outstanding.
 

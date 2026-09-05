@@ -7,14 +7,21 @@ import requests
 
 from mva_runner import preflight
 
-LIMITS = {"cpus": 112, "memory_gib": 400, "additional_disk_bytes": 250_000_000_000, "disk_reserve_bytes": 10_000_000_000}
+LIMITS = {"cpus": 112, "memory_gib": 400, "additional_disk_bytes": 400_000_000_000, "disk_reserve_bytes": 10_000_000_000}
 
 
-@pytest.mark.parametrize("key,value", [("cpus", 113), ("memory_gib", 401), ("additional_disk_bytes", 250_000_000_001),
-                                      ("cpus", 0), ("cpus", True), ("memory_gib", "400"), ("disk_reserve_bytes", -1)])
+@pytest.mark.parametrize("key,value", [("cpus", 113), ("memory_gib", 401), ("additional_disk_bytes", 400_000_000_001),
+                                      ("cpus", 0), ("cpus", True), ("memory_gib", "400"), ("disk_reserve_bytes", -1),
+                                      ("additional_disk_bytes", 0), ("disk_reserve_bytes", 400_000_000_000)])
 def test_execution_configuration_cannot_enlarge_authorisation(key, value):
     assert preflight.limits_valid(LIMITS)
     assert not preflight.limits_valid({**LIMITS, key: value})
+
+
+@pytest.mark.parametrize("disk", [250_000_000_000, 300_000_000_000, 400_000_000_000])
+def test_smaller_allowances_and_exact_approved_boundary_are_valid(disk):
+    # Raising the ceiling does not require a smaller installation to consume it.
+    assert preflight.limits_valid({**LIMITS, "additional_disk_bytes": disk})
 
 
 def test_hf_authentication_requires_matching_identity_and_gated_file_access(tmp_path, monkeypatch):

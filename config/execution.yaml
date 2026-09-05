@@ -2,7 +2,8 @@
 limits:
   cpus: 112
   memory_gib: 400
-  additional_disk_bytes: 250000000000
+  # User approved this increase on 2026-09-05; the original baseline is unchanged.
+  additional_disk_bytes: 400000000000
   # Buffer for in-flight writes while a stage terminates.
   disk_reserve_bytes: 10000000000
 supervisor:
