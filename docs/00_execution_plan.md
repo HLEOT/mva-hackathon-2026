@@ -446,6 +446,11 @@ status report. Revalidate them before choosing the next stage.
   At 20:14 UTC, a live synthetic probe verified the owned loopback listener,
   unauthenticated rejection (HTTP 401), and authenticated structured inference.
   No patient content was used in that probe; detailed receipts remain private.
+- Implementation verification: 247 synthetic tests passed after bounded local
+  finalist-review recovery. Rejected answers receive up to three local attempts
+  against unchanged evidence; each must pass the existing exact-match gate.
+  Tests cover cross-record copying, repeated failure, schema failure and
+  separation of transport retries. No evidence is silently repaired in code.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -484,6 +489,9 @@ status report. Revalidate them before choosing the next stage.
 - Code checkpoint `6ed7bab` published non-destructive BWA provenance. All 101
   files and modes matched the public tree and isolated checkout; all 229 tests
   and the dependency check passed there. The original staged index was unchanged.
+- Code checkpoint `083a55f` published direct loopback transport. All 102 files
+  and modes matched the public tree and isolated checkout; all 242 tests and
+  the dependency check passed there. The original staged index was unchanged.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -521,6 +529,13 @@ status report. Revalidate them before choosing the next stage.
   Read-tool CLI probes confirmed the installed QC and phasing options. The
   Synapse wiki's public attachment metadata contained only a drawing and its
   preview, not a citation document; organiser confirmation was requested.
+- At 20:20 UTC, the annotation/prioritisation refresh was verified complete,
+  with its candidate artifact matching the worker receipt. The continuation
+  queue had successfully launched the full pipeline and exited. The first
+  resumed finalist review stopped at its exact-evidence gate. After synthetic
+  recovery tests passed and all prior owners were confirmed stopped, the full
+  run was resumed with bounded local review recovery. Detailed diagnostics
+  and attempt records remain private; read-validation acceptance is pending.
 
 ### Blockers and prerequisites
 
@@ -538,15 +553,16 @@ status report. Revalidate them before choosing the next stage.
 ### Exact next action
 
 On the next execution turn, run ./mva status --json and reconcile the private
-checkpoints with live process identities, including the one-off refresh receipt
-at work/private/runner/prioritise_refresh_state.json and the continuation queue
-at work/private/runner/resume_after_refresh_state.json. Let the verified live
-queue perform the full resumption; if it stopped, investigate its category and
-ownership before taking over. Resume from the first
-incomplete or invalid stage after both jobs finish; do not restart a healthy
-process based on historical status above. Finish remaining recovery/acceptance tests, raw-read validation, local
-Track 2 synthesis, and packaging as their prerequisites become ready. Publish
-coherent audited changes incrementally and verify the final code release.
+checkpoints with live process identities. The auxiliary refresh has completed
+and the one-shot continuation queue has already launched and exited; their
+receipts under work/private/runner are historical prerequisites, not new jobs
+to start. Follow the full supervisor and verify bounded finalist review before
+read alignment. If it stops, inspect only sanitised categories and local
+validators, then resume the first invalid or incomplete stage after resolving
+the cause. Do not restart healthy workers or weaken scientific evidence gates.
+Finish raw-read validation, local Track 2 synthesis, and packaging as their
+prerequisites become ready. Publish coherent audited changes incrementally and
+verify the final code release.
 
 ### Outcomes and remaining work
 

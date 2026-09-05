@@ -163,6 +163,43 @@ def validate_selections(selections: list[dict], candidates: dict) -> None:
                 raise InterpretationError("Finalist evidence does not match the supplied record")
 
 
+def infer_finalist_selections(system: str, payload: dict, schema: dict) -> tuple[dict, list[dict]]:
+    """Allow at most three local reviews; never repair scientific values in code.
+
+    A copied field can be real but belong to another candidate. Return the
+    rejected response and validation reason to the local model for a fresh
+    review of the original evidence. Every replacement must pass the unchanged
+    exact-match gate. Retain rejected attempts privately and fail closed when
+    the bounded review cannot satisfy it; do not retry an identical cached input.
+    """
+    candidates = {row["candidate_id"]: row for row in payload["candidates"]}
+    attempts, feedback = [], None
+    receipt = PROJECT_ROOT / "work/private/finalist_review_attempts.json"
+    for attempt in range(1, 4):
+        request = dict(payload)
+        if feedback is not None:
+            request["validation_feedback"] = feedback
+        answer = None
+        try:
+            answer = infer(system, json.dumps(request), schema, "finalists")
+            validate_selections(answer["selections"], candidates)
+        except InterpretationError as exc:
+            attempts.append({"attempt": attempt, "status": "rejected", "reason": str(exc)})
+            atomic_write_json(receipt, {"review_mode": "automated_local", "attempts": attempts,
+                                       "completed": False, "updated_at": utc_now()})
+            feedback = {"attempt": attempt, "validation_error": str(exc), "previous_response": answer,
+                "instruction": "Re-evaluate the original candidates. Each cited field and exact string value "
+                "must belong to that selection's own candidate_id, not another record. Reconsider the "
+                "selection, rationale and uncertainty together; do not preserve an unsupported conclusion. "
+                "The original evidence and acceptance rules have not changed."}
+            continue
+        attempts.append({"attempt": attempt, "status": "accepted"})
+        atomic_write_json(receipt, {"review_mode": "automated_local", "attempts": attempts,
+                                   "completed": True, "updated_at": utc_now()})
+        return answer, attempts
+    raise InterpretationError("Finalist review failed evidence validation after three local attempts")
+
+
 def finalists() -> None:
     candidate_path = PROJECT_ROOT / "results/private/candidates_ranked.tsv"
     all_candidates = _candidate_rows(candidate_path)
@@ -182,17 +219,16 @@ def finalists() -> None:
                 break
     schema = {"type": "object", "properties": {"selections": {"type": "array", "minItems": 1, "maxItems": 10,
         "items": {"type": "object", "properties": {
-            "candidate_id": {"type": "string"}, "finding_type": {"enum": ["primary", "secondary"]},
+            "candidate_id": {"type": "string", "enum": list(shortlist)}, "finding_type": {"enum": ["primary", "secondary"]},
             "rationale": {"type": "string"}, "uncertainty": {"type": "string"},
             "evidence": {"type": "array", "minItems": 2, "items": {"type": "object",
-                "properties": {"field": {"type": "string"}, "value": {"type": "string"}},
+                "properties": {"field": {"type": "string", "enum": sorted({field for row in shortlist.values() for field in row})},
+                               "value": {"type": "string"}},
                 "required": ["field", "value"], "additionalProperties": False}}},
             "required": ["candidate_id", "finding_type", "rationale", "uncertainty", "evidence"], "additionalProperties": False}}},
         "required": ["selections"], "additionalProperties": False}
-    answer = infer((PROJECT_ROOT / "prompts/local/finalists.md").read_text(),
-                   json.dumps({"candidates": list(shortlist.values()), "phenotype": load_jsonish(PROJECT_ROOT / "config/proband.local.yaml")}),
-                   schema, "finalists")
-    validate_selections(answer["selections"], shortlist)
+    answer, attempts = infer_finalist_selections((PROJECT_ROOT / "prompts/local/finalists.md").read_text(),
+        {"candidates": list(shortlist.values()), "phenotype": load_jsonish(PROJECT_ROOT / "config/proband.local.yaml")}, schema)
     output = io.StringIO()
     fields = ["candidate_id", "selected", "final_rank", "finding_type", "review_reason"]
     writer = csv.DictWriter(output, fields, delimiter="\t")
@@ -209,7 +245,8 @@ def finalists() -> None:
     reviewed_finalists(path, candidate_path)
     atomic_write_json(PROJECT_ROOT / "work/private/finalist_review.json", {"review_mode": "automated_local",
         "reviewed_at": utc_now(), "candidates_sha256": sha256_file(candidate_path),
-        "model_manifest_sha256": sha256_file(MANIFEST), "selections": answer["selections"]})
+        "model_manifest_sha256": sha256_file(MANIFEST), "validation_attempts": attempts,
+        "selections": answer["selections"]})
 
 
 def reassess_reads() -> bool:

@@ -115,6 +115,14 @@ launching a duplicate. Atomic private checkpoints retain stage fingerprints,
 outputs, attempts and technical error categories. Selected-stage completion is
 not overall project completion or verification of code publication.
 
+Finalist selection allows at most three local interpretation attempts. Rejected
+answers and validation reasons are returned only to the local model, alongside
+the unchanged original evidence. Candidate IDs and evidence field names are
+schema-constrained; every cited value must exactly match its own candidate's
+record. Code never substitutes a matching value to rescue a conclusion. The
+attempt audit is private, and repeated rejection stops the stage. Transport
+failures remain the supervisor's responsibility, not an interpretation retry.
+
 The separate `provenance` stage owns the final scientific manifest. Report or
 publication-code edits can refresh source hashes without invalidating the
 measured reads or reserving alignment scratch space again. The manifest records
