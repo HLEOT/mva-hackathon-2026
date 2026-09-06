@@ -13,6 +13,7 @@ from .official import ROOT as OFFICIAL, prepare as prepare_official
 from .pitch import build_pitch, make_slides
 from .publication import verify_release
 from .qc import read_fastqc_summary, report_section as qc_report_section
+from .read_evidence import verify_reassessment
 from .render import inspect_pdf, markdown_to_pdf
 from .storage import EXECUTION, require_space, snapshot
 from .supervisor import read_state
@@ -125,6 +126,7 @@ def package() -> None:
     if not identity.exists():
         atomic_write_json(identity, {'hf_username': username, 'github_url': github})
     _assert_package_readiness(verify_large_hashes=True)
+    read_review = verify_reassessment()
     prepare_official()
     release = verify_release(cfg['delivery']['github_repository'])
     disclosure, missing = ai_disclosure()
@@ -151,14 +153,14 @@ def package() -> None:
         'The current ranking uses the weaker allele for effect, technical and Exomiser evidence in a pair. '
         'The historical arithmetic and known-gene-first ordering are retained in the baseline comparator. '
         'Same-locus and input-cis pairs cannot enter the current shortlist. Reads may remove contradicted hypotheses; '
-        'the immutable pre-read proposal and reassessment record retain that decision trail.\n\n'
+        'the immutable pre-read proposal, archived first-pass measurements, and linked reassessment records retain that decision trail.\n\n'
         '## Actual AI use and data handling\n\n' + disclosure + '\n\n## Dataset citation\n\n' + DATASET_CITATION + '\n')
     track2_report(data, corpus, report2, github, disclosure)
     raw_inputs = load_jsonish(PROJECT_ROOT / 'config/config.yaml')['huggingface']['fastq_files']
     qc = read_fastqc_summary(PROJECT_ROOT / 'work/private/qc', raw_inputs)
     for report in [report1, report2]:
         atomic_write_text(report, report.read_text() + '\n' + qc_report_section(qc))
-    checks, artifacts = {'raw_read_qc': qc}, [submission, report1, report2]
+    checks, artifacts = {'raw_read_qc': qc, 'read_reassessment': read_review}, [submission, report1, report2]
     for report in [report1, report2]:
         pdf = report.with_suffix('.pdf')
         markdown_to_pdf(report, pdf)

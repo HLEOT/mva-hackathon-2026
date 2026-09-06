@@ -3,7 +3,7 @@
 <!-- This is the approved execution guide. Keep progress and decisions current,
      and keep patient-level evidence, credentials, and private logs out of it. -->
 
-Status: implementation in progress; scientific outputs are not yet complete.
+Status: real analysis gates passed; delivery recovery and final acceptance remain.
 
 Workspace: `/data/projects/mva-hackathon-2026`
 
@@ -393,10 +393,10 @@ a large job is still running or because a synthetic test suite passes.
 - [x] Approved plan saved as a Markdown execution guide.
 - [x] Milestone 1: execution contract and baseline.
 - [x] Milestone 2: unified launcher and persistent execution.
-- [ ] Milestone 3: complete and strengthen Track 1.
-- [ ] Milestone 4: raw-read validation within the storage allowance.
-- [ ] Milestone 5: local interpretation.
-- [ ] Milestone 6: Track 2 evidence and repurposing workflow.
+- [x] Milestone 3: complete and strengthen Track 1.
+- [x] Milestone 4: raw-read validation within the storage allowance.
+- [x] Milestone 5: local interpretation.
+- [x] Milestone 6: Track 2 evidence and repurposing workflow.
 - [ ] Milestone 7: submission materials and code release.
 - [ ] Full acceptance checks and final handoff.
 
@@ -472,6 +472,11 @@ status report. Revalidate them before choosing the next stage.
   explicitly approved 400 GB additional-disk ceiling. Tests accept smaller
   allowances and the exact ceiling, reject one byte above it and invalid
   reserves, and retain the original CPU and RAM authorization boundaries.
+- Implementation verification: 285 synthetic tests passed on 2026-09-06 after
+  repairing the renderer-to-pitch page contract, preserving verified unchanged
+  model-installation identity, and archiving read reassessment evidence before
+  a second pass. Tests cover exact CRLF bytes, linked exclusion history,
+  all-contradicted failure, tampering, and stage-scoped invalidation.
 - Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
   discovery and structured synthetic inference passed. Loopback authentication
   is configured; private prompts and responses remain local.
@@ -523,6 +528,10 @@ status report. Revalidate them before choosing the next stage.
 - Code checkpoint `0f79dc3` published truthful paused-worker status. All 106
   files/modes matched the public tree and isolated checkout; 263 tests and the
   dependency check passed there. The original staged index was preserved.
+- Code checkpoint `8cc8c57` published the approved 400 GB ceiling. All 106 files
+  and modes matched the public tree and isolated checkout; 268 tests and the
+  dependency check passed there. The original staged index was preserved.
+  The subsequent delivery-recovery changes require their own verified upload.
 - At 18:38 UTC, all seven official source/template files matched their upstream
   Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
   the live head had no selected-source changes. The public Synapse wiki tree
@@ -601,6 +610,37 @@ status report. Revalidate them before choosing the next stage.
   counters proved resumed computation. Additional allocated storage was
   236.11 GB. Receipts remain under work/private/runner; this is not completion
   of alignment, read validation, Track 2 or delivery.
+- At 23:38 UTC on 2026-09-05, the completed CRAM and index passed an independent
+  integrity audit: full file hashes, samtools quickcheck, readable index,
+  coordinate-sort header, matching sample identity, and all 3,366 reference
+  contigs. The CRAM is 21,120,249,787 bytes; its index is 1,807,237 bytes.
+  Quickcheck is not a full per-read decode. Both sorting scratch sets were
+  released by their completed tools; no source data were deleted.
+- At 23:41 UTC, measured read validation completed. One of four original
+  proposals was excluded and three remained after the planned second pass.
+  Track 2 completed at 23:42 UTC. Independent local checks on 2026-09-06
+  reproduced all five drug decisions, with zero retained hypotheses; no
+  unsupported replacement or therapeutic claim was introduced.
+- Packaging then failed at FFmpeg concatenation because pitch assembly searched
+  the old flat preview directory while the renderer used PDF-hash directories.
+  The repaired shared page lookup requires the exact current page inventory in
+  numeric order and strict slide/audio/frame coverage. A real local synthetic
+  six-slide video passed full decoding at 136.587647 seconds, with no clipped
+  slide text. This smoke test is not acceptance of the real pitch.
+- At 00:10 UTC on 2026-09-06, the overwritten first-pass read table was recovered
+  by recomputing the original proposal intervals, phase and measurements from
+  the unchanged CRAM. Its SHA-256 exactly matched the original decision receipt.
+  The original decision bytes and recovered table are now content-addressed
+  archives; the current three-row results were unchanged. New reassessments
+  archive before overwriting and link earlier decisions. Delivery verifies the
+  history and current shortlist, retaining archive hashes in its private manifest.
+- At 00:35 UTC, the normal workflow dry run scheduled only run/final manifests
+  and aggregate targets, not annotation, reindexing or alignment. Candidate
+  table bytes still matched their recorded review; changed modification times
+  invalidate their supervisor checkpoint. Use normal recovery, not fabricated
+  checkpoint updates or suppressed rerun triggers. Model re-verification now
+  preserves an unchanged installation manifest after checksum/GPU checks.
+  Additional allocated storage was approximately 129.74 GB of the 400 GB limit.
 
 ### Blockers and prerequisites
 
@@ -614,31 +654,30 @@ status report. Revalidate them before choosing the next stage.
   obtain organiser confirmation before claiming full citation compliance.
 - Estimate and monitor peak additional disk usage before large downloads or
   alignment; ask if the newly approved 400 GB allowance is insufficient.
-- The user approved 400 GB additional disk after overlapping sort scratch
-  reached the previous allowance's pause threshold. The 300–400 GB peak estimate
-  remains a projection, not a guarantee. Preserve the original baseline and
-  reserves. The same worker has resumed with a verified replacement watcher;
-  continue monitoring its live identity and remaining headroom.
+- The storage pause is resolved: the same alignment completed after the 400 GB
+  approval. The watcher and recovery controller are terminal. Preserve the
+  original baseline, completed CRAM and reserves; historical pause/continuation
+  receipts are not jobs to restart.
+- The real bundle has not yet passed final acceptance. Publish and reproduce
+  the tested recovery code, then resume the normal dependency chain to build
+  the actual video and final delivery manifest. Missing disclosure fields may
+  leave an explicitly labelled draft even after all artifact checks pass.
 
 ### Exact next action
 
-On the next execution turn, run ./mva status --json and reconcile the private
-checkpoints with live process identities. The auxiliary refresh has completed
-and the one-shot continuation queue has already launched and exited; their
-receipts under work/private/runner are historical prerequisites, not new jobs
-to start. The last verified read-validation worker has resumed under the
-explicitly approved 400 GB additional-disk allowance. Its replacement watcher
-is in tmux session `mva-budget-watch-400gb`; the original alignment was not
-restarted. Finalist review has passed, but measured read support and phase
-remain pending. If the budget watcher reports another pause, verify its actual
-live controller and saved worker/group identities; do not launch a duplicate
-or exceed 400 GB without new authority. Check `paused_stages` as well as live
-PIDs. If the runner stops, inspect only sanitised categories and local
-validators, then resume the first invalid or incomplete stage after resolving
-the cause. Do not restart healthy workers or weaken scientific evidence gates.
-Finish raw-read validation, local Track 2 synthesis, and packaging as their
-prerequisites become ready. Publish coherent audited changes incrementally and
-verify the final code release.
+Reconcile ./mva status --json with live identities and current private receipts.
+The original alignment, continuation queue, budget watcher and exact-evidence
+recovery controller have completed; do not relaunch them. The local model may
+remain live. Verify the read-evidence history and real Track 2 audit, publish
+the focused recovery changes, and reproduce the public checkout's tests.
+Then use ./mva run --resume --tracks both after confirming no competing owner.
+Allow genuinely invalid checkpoints and manifests to refresh while reusing the
+completed CRAM; the last dry run scheduled no reindexing or realignment.
+Follow the new supervisor through actual report/workbook/video validation.
+Record any remaining disclosure or citation prerequisite honestly and preserve
+the draft rather than inventing user settings. Keep all real scientific text,
+rendered images, narration and detailed diagnostics local. Only technical
+counts and sanitised error categories belong in the hosted conversation.
 
 ### Outcomes and remaining work
 
@@ -648,12 +687,12 @@ are implemented. The immutable baseline is 184,345,051,136 bytes. The original
 45-entry staged index is preserved and checkpointed privately. Streaming CRAM
 and immutable pre-read proposals prevent full BAM overlap and unnecessary
 realignment when the shortlist changes. Real phenotype review, source-checked
-finalist review and public evidence acquisition are complete. Raw-read QC
-reports have been integrity-checked; the preserved alignment has resumed under
-the approved 400 GB additional-disk allowance with its original inputs and
-process identities. A tested, code-only checkpoint is public.
-Full real analyses, final deliverables, remaining recovery/acceptance tests and
-final code-release verification are outstanding.
+finalist review and public evidence acquisition are complete. Raw-read QC,
+completed alignment, measured reassessment history, and Track 2 decision gates
+have been checked locally. Scientific uncertainty remains explicit and is not
+a software failure. A tested, code-only checkpoint is public. Recovery-code
+publication, the actual narrated pitch, final artifact acceptance, accurate
+user disclosure and final code-release reproduction remain outstanding.
 
 ## 7. Reference sources
 

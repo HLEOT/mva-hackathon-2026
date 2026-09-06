@@ -61,7 +61,10 @@ def execute(name: str) -> None:
     elif name in {"phenotype", "finalists"}:
         from . import review
         getattr(review, name)()
-    elif name in {"prioritise", "download_reads", "validate_reads", "provenance"}:
+    elif name == "validate_reads":
+        from .read_evidence import validate_reads
+        validate_reads()
+    elif name in {"prioritise", "download_reads", "provenance"}:
         from . import scientific
         getattr(scientific, name)()
     elif name == "track2":

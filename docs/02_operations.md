@@ -83,8 +83,8 @@ their own BAM runs simultaneously before final merge cleanup. Budget that
 overlap as well as the final CRAM; the behaviour is visible in the pinned
 [samtools 1.22 sorting implementation](https://github.com/samtools/samtools/blob/1.22/bam_sort.c).
 
-For the current already-running alignment, a private one-off watcher in tmux
-session `mva-budget-watch-400gb` preserves process memory if storage becomes tight.
+For the now-completed alignment, a private one-off watcher ran in tmux
+session `mva-budget-watch-400gb` to preserve process memory when storage was tight.
 Its receipt is `work/private/runner/alignment_budget_watch_state.json`; verify
 its controller PID/start-time as well as the recorded stage owner. It pauses
 only that validated session/process group when remaining headroom reaches
@@ -97,6 +97,9 @@ continued without a restart. The original pause remains recorded in
 `work/private/runner/paused_alignment_checkpoint.json`; approval and replacement
 details are in `work/private/runner/disk_allowance_400gb_approval.json`. The
 current watch receipt tracks the replacement controller, not the retired one.
+Both the alignment and watcher have since finished. Treat these receipts as
+historical recovery evidence, not instructions to restart the watcher or signal
+the original worker. Reuse the independently verified CRAM and index.
 
 If that receipt reports a verified pause, do not start another supervisor.
 After an explicit storage decision, reconcile the approved contract and
@@ -138,6 +141,27 @@ scheduler deletes declared outputs before rerunning a shell rule. The separate
 `record_bwa_provenance` rule is read-only with respect to index files. A mismatch
 in reference identity or BWA executables stops for investigation without
 blessing compatibility or erasing the preserved sidecars.
+
+Read reassessment can replace the working table after excluding or reordering
+proposals. The unified read worker first archives its exact bytes under
+`work/private/read_evidence/<sha256>.tsv`, then links the decision and earlier
+decisions through immutable JSON archives. Preserve CRLF bytes: ordinary text
+newline conversion changes the evidence checksum. The delivery gate checks
+archive hashes, the declared exclusion/ranking policy, and current finalist
+coverage; an unverifiable older decision is not silently overwritten.
+
+The first live run predated that archive step. Its original table was recovered
+from the unchanged CRAM using the original proposal intervals and phasing; the
+recovered SHA-256 exactly matched the pre-existing decision receipt. That
+controller has finished. Do not rerun the private recovery or change the original
+decision to fit new measurements. Its receipt is
+`work/private/runner/read_evidence_recovery_state.json`.
+
+Pitch rendering and assembly share the current PDF's hash-scoped page directory.
+Missing, stale or duplicate pages fail before video assembly. Check the actual
+bundle's full decode and duration, not only the separate synthetic smoke test.
+Re-verifying an unchanged local model preserves its installation identity after
+the full checksum and GPU gates; timestamps alone must not create a new model.
 
 ## Verification and publication
 

@@ -65,10 +65,11 @@ def stages(tracks: str = "both") -> list[Stage]:
         Stage("download_reads", ("finalists",), ("config/config.yaml", "src/mva_track1/download.py"),
               ("work/private/runner/reads_downloaded.json",)),
         Stage("validate_reads", ("download_reads", "finalists"), ("workflow/Snakefile", "src/mva_track1/validation.py",
+              "src/mva_runner/read_evidence.py", "src/mva_runner/tasks.py",
               "src/mva_track1/submission.py", "src/mva_runner/review.py", "workflow/envs/reads.yaml",
               "src/mva_runner/bwa_provenance.py", "workflow/envs/bwa_index.yaml")
               + scientific_inputs + read_rules + scientific_envs,
-              ("config/finalists.local.tsv", "results/private/read_validation.tsv"), 95_000_000_000),
+              ("config/finalists.local.tsv", "results/private/read_validation.tsv", "work/private/read_reassessment.json"), 95_000_000_000),
     ]
     if tracks == "both":
         result.append(Stage("track2", ("public_evidence", "validate_reads", "model"),
@@ -90,7 +91,7 @@ def stages(tracks: str = "both") -> list[Stage]:
         return [stage for stage in result if stage.name != "public_evidence"]
     dependencies = ("provenance", "track2")
     result.append(Stage("package", dependencies, ("config/execution.yaml", "config/ai_usage.local.yaml",
-                        "src/mva_runner/delivery.py", "src/mva_runner/official.py", "src/mva_runner/render.py", "src/mva_runner/qc.py",
+                        "src/mva_runner/delivery.py", "src/mva_runner/official.py", "src/mva_runner/render.py", "src/mva_runner/qc.py", "src/mva_runner/read_evidence.py",
                         "src/mva_runner/workbooks.py", "src/mva_runner/pitch.py", "src/mva_runner/speech.py",
                         "src/mva_track1/report.py", "src/mva_track1/submission.py", "workflow/envs/delivery.yaml"),
                         ("submissions/delivery_manifest.json",), 1_000_000_000))
