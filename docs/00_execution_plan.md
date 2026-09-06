@@ -1,752 +1,190 @@
-# One-prompt completion of both MVA hackathon tracks
+# Execution plan: Codex analysis, PC computation
 
-<!-- This is the approved execution guide. Keep progress and decisions current,
-     and keep patient-level evidence, credentials, and private logs out of it. -->
+<!-- This is the current contract and compact handoff. Keep decisions, progress,
+     verification and the exact next action current; keep verbose logs private. -->
 
-Status: real analysis and draft artifact checks passed; disclosures remain unconfirmed.
+## 1. Outcome and current direction
 
-Workspace: `/data/projects/mva-hackathon-2026`
+Complete both tracks of the Rare Disease, Real Kid: MVA Hackathon 2026 using
+authorised challenge data, reproducible local computation, evidence-grounded
+interpretation, and independently checked submission materials. Software tests
+alone are not scientific completion. A ranked hypothesis is not a diagnosis;
+an experimental drug hypothesis is not a treatment recommendation.
 
-Planning assessment date: 2026-09-05. Recheck operational facts before execution.
+**Codex in this conversation directs and interprets the analysis. Scientific
+programs run on this PC. There is no separate downloaded LLM, inference server,
+nested coding agent, or workflow-owned hosted AI API.** The user explicitly
+rejected the earlier local-model architecture on 2026-09-06.
 
-## How to use this file
+Use [the one-prompt handoff](../prompts/one_shot.md) to start or resume this plan.
+Persist checkpoints and continue useful independent work through interruptions.
+A prompt cannot remove service limits or guarantee an indefinitely active Codex
+session. Long scientific workers run in tmux; interpretation waits for Codex.
 
-Open the project checkout in your coding model and give it the prompt below,
-or copy the equivalent prompt from [prompts/one_shot.md](../prompts/one_shot.md).
-This file is the full execution contract: milestones, ordered file structure,
-commenting requirements, acceptance checks, and recovery instructions.
+## 2. Authority, privacy and resource limits
 
-The same prompt starts a new run or resumes an interrupted one. First reconcile
-the recorded progress with current checkpoints and live process identities;
-do not restart healthy jobs or repeat verified stages just because this document
-contains an older status snapshot. Saving or reviewing this plan does not itself
-start a scientific run.
+- Preserve the user's original staged index and unrelated work. Code-only
+  publication to `HLEOT/mva-hackathon-2026` is authorised in focused commits.
+  Audit every path, preserve remote changes, verify uploads, never force-push.
+- Use at most 112 CPUs, 400 GiB RAM and 400,000,000,000 additional allocated
+  bytes beyond the immutable 184,345,051,136-byte baseline. Keep a 10 GB reserve
+  and check filesystem free space too. Do not reset the baseline after cleanup.
+- Keep task environments, downloads, caches and scratch inside this checkout.
+  Existing hardware and Codex access are used; do not purchase cloud compute.
+- Codex with local tool execution is not necessarily local model inference.
+  Before private case evidence enters this conversation, confirm the actual
+  account terms meet the organiser's no-training/no-rights and limited-retention
+  requirements. Until then use public code, public sources, synthetic fixtures
+  and sanitised technical status. Do not infer settings or read credentials to
+  guess a subscription. See [the organiser's clarification](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/discussions/2).
+- `config/ai_usage.local.yaml` records the existing Codex account's `hosted_plan`
+  and `hosted_data_setting`, plus explicitly confirmed booleans
+  `private_codex_review_authorized` and `provider_terms_confirmed`. These are
+  evidence of permission and methods disclosure, not a new account purchase.
+  Never fill them speculatively or turn them on to bypass a gate.
+- Never expose gated data, private outputs or credentials on GitHub. Challenge
+  submission, video hosting and required lifecycle communications remain user
+  handoff actions. Routine safe local cleanup is already authorised.
 
-## Prompt to give the implementation model
+## 3. Ordered structure and commenting standard
 
 ```text
-Read AGENTS.md and docs/00_execution_plan.md completely. Implement or resume
-the approved plan in /data/projects/mva-hackathon-2026. Treat the plan as the
-execution guide and keep its progress, decisions, verification results, and
-exact next action current. Reconcile checkpoints with live processes before
-launching work; preserve healthy jobs and reuse verified completed stages.
-
-Complete the software, run both hackathon tracks on the authorised local data,
-generate and validate the submission materials, and create and upload the
-audited code-only release to HLEOT/mva-hackathon-2026. Preserve the existing
-staged work, environments, and reusable resources.
-
-Publish small, focused, audited commits as coherent changes are ready; do not
-wait for one bulk final commit. Check the destination branch before each write,
-preserve remote changes, and verify each upload. Never force-push or include
-unrelated staged files, secrets, source data, or patient-derived artifacts.
-
-Use clear comments for a bioinformatician and the ordered file structure in
-this plan. Work through the milestones without asking whether to continue.
-Use up to 112 CPUs, 400 GiB RAM, and the available GPU, with no paid cloud
-services. Enforce a combined limit of 400 GB additional disk usage beyond the
-existing project footprint. Ask before exceeding that allowance.
-
-Keep private interpretation local. Record automated reviews honestly, preserve
-scientific uncertainty, and never invent evidence, credentials, approvals,
-successful checks, or completion. Checkpoint long-running work and resume it
-after interruptions. Continue independent work when another stage is blocked.
-
-Ask only when a consequential ambiguity, missing credential, additional disk
-allowance, or action beyond the approved scope prevents further progress.
-Repository creation and code upload are already authorised. Challenge
-submission and video hosting remain handoff actions.
-
-Finish with verified artifact paths, the code repository URL, a concise account
-of validation, and any remaining external handoff tasks. Do not stop at a
-scaffold or a passing synthetic test suite when the real analysis remains.
+AGENTS.md                         Project-wide instructions
+README.md                         Entry points and short setup
+docs/
+  00_execution_plan.md            Current contract, progress and next action
+  01_architecture.md              Scientific design and evidence boundaries
+  02_operations.md                Run, review, recover and clean up
+  03_submission.md                Deliverables and external handoff
+prompts/
+  one_shot.md                     Copy-and-paste Codex handoff
+  review/                        Phenotype, finalist and Track 2 review guides
+config/                          Commented public configuration; ignored secrets
+src/
+  mva_runner/                    Supervisor, Codex checkpoints, cleanup, delivery
+  mva_track1/                    Parsing, annotation, ranking and read validation
+  mva_track2/                    Public evidence and repurposing evidence gates
+workflow/
+  Snakefile                      Shared scientific dependency graph
+  rules/00_targets.smk ...        Ordered rules through 70_provenance.smk
+  envs/                          Pinned scientific environment definitions
+tests/                           Synthetic fixtures and regression tests
+data/gated/                      Ignored authorised source data
+resources/public/                Ignored installed references and public evidence
+work/private/                    Checkpoints, reviews, scratch and audit history
+results/private/                 Scientific evidence tables and provenance
+submissions/                     Private reports, CSV, workbooks and pitch
 ```
 
-## 1. Objective and accepted decisions
-
-Turn the existing Track 1 foundation into a resumable workflow that completes
-both MVA hackathon tracks, produces evidence-backed research outputs, packages
-the submission materials, and publishes reproducible code.
-
-Completion means validated local deliverables and a verified code release.
-Leaderboard scoring and expert judging remain external outcomes. Do not equate
-a plausible candidate, model-generated interpretation, or passing software
-test with a confirmed causal variant or an effective treatment.
-
-| Decision | Approved requirement |
-|---|---|
-| Scientific scope | Both Track 1 variant identification and Track 2 drug repurposing |
-| Execution scope | Build, test, run the real analyses, package, and publish code |
-| CPU limit | Up to 112 CPUs, accounting for concurrent processes |
-| RAM limit | Up to 400 GiB, accounting for concurrent processes |
-| GPU | Use the available local GPU where useful |
-| Additional disk | At most 400 GB beyond the existing footprint, explicitly approved on 2026-09-05; ask before exceeding it |
-| Paid infrastructure | No paid cloud compute or paid APIs |
-| Interpretation | Deterministic checks plus a local model; explicitly automated reviews |
-| Pitch | Locally generated slides, timed script, synthetic narration, and MP4 |
-| Hugging Face identity | Account `ErnieTn`, verified during planning; recheck before packaging |
-| GitHub destination | Publish to public repository `HLEOT/mva-hackathon-2026`; create only if absent |
-| GitHub contents | Code, documentation, configuration templates, and synthetic tests only |
-| Commit cadence | Small, focused, audited commits as coherent changes are ready; no bulk-commit requirement |
-| External handoff | Challenge submission and video hosting are not automatic |
-
-The disk allowance is decimal: **400,000,000,000 additional bytes**. It includes
-new downloads, environments, model weights, caches, temporary files, private
-results, and delivery artifacts. Record a baseline before implementation and
-account for task-created storage outside the project too. Do not evade the
-allowance by moving temporary files elsewhere.
-
-## 2. Verified starting point
-
-These observations describe the planning assessment, not guarantees about a
-future run:
-
-- All **113 existing synthetic tests passed** using
-  `.conda/launcher/bin/python -m pytest -q`.
-- All five environments reported ready: scheduler/launcher, launcher rule,
-  HTS rule, annotation rule, and read-validation rule environments.
-- Core data and its manifest, the private phenotype draft, GRCh38 reference,
-  BWA-MEM2 index, VEP merged cache, and Exomiser resources reported ready.
-- Reviewed phenotype configuration, ranking, reviewed finalists, read
-  validation, final run manifest, and submission identity remained incomplete.
-- The public-resource Snakemake dry run had no pending jobs. It warned of
-  missing provenance metadata for three resource-installation rules. Validate
-  and record existing resources; do not blindly redownload them or fabricate
-  completion markers.
-- Approximately 166 GB of public resources and 6.1 GB of environments were
-  present. The eight remaining FASTQs total **84,668,434,104 bytes (84.67 GB)**.
-- The host exposed 128 CPUs, about 503 GiB RAM, a roughly 96 GB NVIDIA RTX PRO
-  6000 Blackwell GPU, and 2.8 TB free disk. Available physical space does not
-  increase the authorised 250 GB allowance.
-- The installed CUDA compiler reported version 12.0. Check compatibility with
-  Blackwell before selecting or installing the local inference runtime.
-- The repository had 45 staged files, no commits, and no Git remote. These
-  staged files are the user's existing work and must be preserved.
-- The connected GitHub account was `HLEOT`. The proposed repository returned
-  not found. The connector did not expose repository creation, and the shell
-  lacked GitHub CLI authentication.
-
-## 3. Implementation milestones
-
-### Milestone 1: Execution contract and baseline
-
-Create the agent instruction file and reusable prompt from this guide. Record
-the current source state, resource inventory, storage baseline, and applicable
-hackathon requirements. Preserve existing files and valid resources. Keep this
-document self-contained as implementation progresses.
-
-Maintain a progress checklist, decision log, verification record, blockers,
-and exact next action. Only non-sensitive operational summaries belong in
-tracked documentation; private evidence and detailed logs stay in ignored
-locations.
-
-### Milestone 2: Unified launcher and persistent execution
-
-Introduce `./mva` with these interfaces:
-
-```bash
-# Check configuration, authentication, resources, and the storage allowance.
-./mva preflight
-
-# Execute both tracks and reuse verified completed stages.
-./mva run --tracks both --resume
-
-# Return machine-readable progress without private scientific content.
-./mva status --json
-
-# Validate and construct the local deliverables.
-./mva package
-
-# Stop the supervised run cleanly, retaining recoverable progress.
-./mva stop
-```
-
-Keep `./mva-track1` compatible. Use Snakemake for scientific dependencies and
-a small supervisor for persistent execution, resource accounting, retries,
-and completion validation. Run the supervisor in a named `tmux` session so a
-terminal disconnect does not terminate healthy analysis jobs.
-
-Persist atomic checkpoints containing stage state, attempts, process identity,
-heartbeat, input/configuration hashes, and artifact validation outcomes. Resume
-verified stages after interruption and invalidate downstream outputs when
-their inputs change. Prevent duplicate launches. Retry transient failures with
-backoff, continue independent work where possible, and expose actionable
-summaries for persistent failures.
-
-A persistent analysis process does not guarantee an indefinitely active coding
-model. Keep sufficient progress on disk to resume the exact coding session or
-continue from this plan after session or service limits interrupt it. Do not
-weaken permissions or bypass service limits to prolong execution.
-
-### Milestone 3: Complete and strengthen Track 1
-
-Replace placeholder reviews with explicitly recorded automated reviews.
-Validate HPO terms against a pinned ontology, retain source evidence locally,
-and preserve uncertain or conflicting assertions. Automated interpretation
-must not masquerade as a human review.
-
-Test real VEP-Exomiser integration and allele matching. Strengthen candidate
-handling for inheritance, evidence supporting both members of a pair,
-same-locus artifacts, and phase. Preserve a genome-wide comparison so
-known-gene prioritisation cannot conceal stronger alternatives. Retain
-unresolved phase honestly and reassess finalists after read validation.
-
-Reuse the existing GRCh38 and annotation resources after validation. Retain
-the baseline ranking as a documented comparator when changing scientific
-ranking behaviour. Explain material changes and their biological rationale.
-
-### Milestone 4: Raw-read validation within the storage allowance
-
-Plan each large stage against both available disk and the remaining additional
-allowance. Include partial downloads, extraction overhead, cache duplication,
-alignment scratch space, and final output overlap in estimates.
-
-The FASTQs consume 84.67 GB before alignment. Avoid duplicate download caches,
-stream duplicate-marked alignment output into CRAM instead of retaining a
-complete intermediate BAM, and account for threads and RAM across concurrent
-pipeline processes. Align once and reuse the verified CRAM when finalists
-change. Clean only identified, regenerable task-owned temporary artifacts once
-their downstream outputs are verified.
-
-Monitor storage during execution. Pause before exceeding the authorised
-allowance and report the additional space required. Do not delete existing
-user resources or source data to avoid requesting more space.
-
-### Milestone 5: Local interpretation
-
-Default to the approximately 18.6 GB Qwen3-30B-A3B `Q4_K_M` model through a
-pinned llama.cpp runtime. Record the exact model revision, checksum, runtime,
-inference parameters, and prompt versions. Verify GPU/runtime compatibility
-with a synthetic smoke test before downloading large additional dependencies.
-
-Bind inference locally with authentication. Keep private prompts, responses,
-and logs owner-readable and Git-ignored. Do not send phenotype text, variants,
-genotypes, or patient-derived interpretation prompts to hosted models.
-
-Require structured responses referencing supplied evidence and validate their
-contents. Retain uncertain conclusions as uncertain. Model output must not
-substitute for measured read support, confirmed phase, verified approval
-status, or sourced biological evidence.
-
-### Milestone 6: Track 2 evidence and repurposing workflow
-
-Create versioned public evidence collections covering MVA biology, pathways,
-drug mechanisms, approval status, safety information, and primary literature.
-Use Reactome, ChEMBL, PubMed/PMC, and official regulatory sources. Record source
-identifiers, retrieval dates, versions where available, and checksums.
-
-Acquire public knowledge independently of private patient content, then join
-it to Track 1 results locally. Avoid placing patient-derived evidence in
-external queries or hosted-model prompts.
-
-For each proposed drug, record the hypothesised variant mechanism, intervention
-direction, supporting and opposing evidence, approval jurisdiction,
-limitations, and proposed experimental validation. Distinguish direct evidence
-from pathway-based inference. Network proximity alone is insufficient to
-establish a therapeutic rationale.
-
-Select up to five defensible hypotheses. Do not fill the list with unsupported
-candidates, infer gain or loss of function without evidence, or describe an
-unvalidated hypothesis as an effective treatment. Explicitly report an absence
-of sufficiently supported candidates if that is what the analysis finds.
-
-The Track 2 report must explain how variant mechanism supports the repurposing
-rationale and address scientific rigor, potential impact, innovation, and
-scalability.
-
-### Milestone 7: Submission materials and code release
-
-Generate the following local deliverables:
-
-- Track 1 CSV validated against the current official schema, with at most ten
-  rows, GRCh38 coordinates, and explicit ranking and uncertainty.
-- Track 1 and Track 2 reports in Markdown and PDF.
-- Completed methods-description workbooks using the official template.
-- Final provenance manifests and a readable submission/handoff checklist.
-- Pitch slides, a timed script, local synthetic narration, and an MP4 lasting
-  no more than 180 seconds, using local speech synthesis and FFmpeg.
-
-Include the required acknowledgement, current dataset citation, actual AI
-usage, and verified data-handling details. Inspect rendered reports and video;
-file existence alone is not acceptance. Keep scientific outputs and the
-generated submission bundle local.
-
-Audit an explicit allowlist of code, documentation, public configuration
-templates, and synthetic tests. Exclude source data, private settings,
-credentials, patient-derived outputs, model weights, environments, caches,
-and logs. Do not use an indiscriminate staging command for publication.
-
-Create the public repository `HLEOT/mva-hackathon-2026`, push the audited code,
-and verify its remote contents. Recheck repository existence first; if a
-repository now exists, establish that it is the intended destination and
-preserve its existing content. Include the canonical repository URL in both
-reports. Repository creation and code upload are already authorised.
-
-Publish incrementally throughout the milestones; publication is not reserved
-for the final packaging stage. Each commit should contain one coherent change
-with an accurate message and relevant checks. Documentation-only commits need
-document/link checks; code commits need the appropriate tests. Inspect the exact
-files and diff before every upload, re-read the remote branch to avoid overwriting
-concurrent work, and verify the resulting commit and file contents afterward.
-Do not force-push or include unrelated entries from the user's staged index.
-An intermediate commit is a progress checkpoint, not proof that the project is
-complete. Record final release verification separately from incremental uploads.
-
-If repository-creation authentication is missing, prepare all independent
-work and request the necessary login without asking for the token in chat.
-The GitHub connector being authenticated does not automatically provide shell
-credentials or a repository-creation capability.
-
-Leave challenge submission and video hosting as explicit final handoff tasks.
-Recheck the current rules before finalising materials and document data
-lifecycle obligations without automatically deleting data or sending messages.
-
-## 4. Ordered file structure and commenting standard
-
-Retain established data locations and the Track 1 package. Organise additions
-as follows. Entries other than this guide may still need to be implemented.
-
-```text
-mva-hackathon-2026/
-├── README.md                       # Purpose, quick start, outputs
-├── AGENTS.md                       # Scope, persistence, verification rules
-├── mva                             # Unified launcher
-├── mva-track1                      # Existing compatible launcher
-├── pyproject.toml
-├── config/
-│   ├── config.yaml                 # Commented Track 1 settings
-│   ├── execution.yaml              # Compute, disk, retries, local model
-│   ├── track2.yaml                 # Public sources and evidence policy
-│   └── *.local.*                   # Ignored credentials/private settings
-├── docs/
-│   ├── 00_execution_plan.md         # Current milestones and recovery state
-│   ├── 01_architecture.md           # Data flow and scientific assumptions
-│   ├── 02_operations.md             # Launch, monitor, resume, troubleshoot
-│   └── 03_submission.md             # Current requirements and handoff
-├── prompts/
-│   ├── one_shot.md                  # Single implementation/execution prompt
-│   └── local/                      # Versioned interpretation templates
-├── src/
-│   ├── mva_runner/                 # Supervisor and resource accounting
-│   ├── mva_track1/                 # Existing variant workflow
-│   └── mva_track2/                 # Evidence and repurposing workflow
-├── workflow/
-│   ├── Snakefile
-│   ├── rules/                      # Numbered stages in execution order
-│   └── envs/                       # Pinned stage environments
-├── tests/                          # Synthetic unit/integration/recovery tests
-├── resources/public/               # Ignored reference/evidence/model caches
-├── data/gated/                     # Ignored source data
-├── work/private/                   # Ignored scratch, checkpoints, inference
-├── results/private/                # Ignored evidence and final analyses
-├── submissions/                    # Ignored reports, CSV, workbook, video
-└── logs/                           # Ignored operational logs
-```
-
-Write comments for a bioinformatician. Explain biological assumptions,
-coordinate conventions, units, thresholds, uncertainty, and recovery behaviour
-instead of merely repeating the code. Document the inputs and outputs of
-substantial functions and workflow stages.
-
-Convert the current JSON-formatted `.yaml` files to commented YAML, while
-retaining compatibility with existing JSON-formatted local configurations.
-Use safe parsing and include the required parser in every environment that
-loads these configurations.
-
-## 5. Verification and acceptance
-
-- Preserve the passing baseline and add meaningful integration tests using
-  synthetic variants, phenotype text, reads, and drug evidence.
-- Test interrupted downloads, restart recovery, stale artifacts, duplicate
-  launches, unavailable sources, malformed model responses, and disk-budget
-  enforcement.
-- Test ambiguous phenotype assertions, unresolved/cis phase, weak second
-  alleles, unsupported drug mechanisms, and contradictory evidence.
-- Verify that private records and credentials cannot enter hosted-model
-  requests, public logs, or the GitHub release.
-- Complete the actual local analyses. Validate the official CSV schema,
-  inspect report rendering, check workbook completeness, and measure the
-  video duration.
-- Confirm that the published code can reproduce the synthetic demonstration
-  from a clean environment.
-- Verify final provenance, artifact integrity, and the uploaded code contents.
-  Mark unresolved scientific conclusions explicitly.
-
-Declare overall completion only after required artifacts pass validation and
-the code upload is verified. Record challenge submission and video hosting as
-external handoff items, not as completed actions.
-
-There is no artificial short wall-clock limit. Healthy jobs continue until
-completion. Missing authentication, persistent technical failures, and a need
-to exceed the disk allowance produce saved, recoverable blockers rather than
-repeated identical attempts or fabricated success. Do not stop merely because
-a large job is still running or because a synthetic test suite passes.
-
-## 6. Progress and recovery record
-
-<!-- Update these sections at each milestone or interruption. Keep detailed
-     scientific evidence in ignored private files, not in this public guide. -->
-
-- [x] Repository and runtime assessed; existing synthetic tests passed.
-- [x] User approved both tracks, local automated interpretation, narrated
-  video, resource limits, and code-only GitHub publication.
-- [x] Approved plan saved as a Markdown execution guide.
-- [x] Milestone 1: execution contract and baseline.
-- [x] Milestone 2: unified launcher and persistent execution.
-- [x] Milestone 3: complete and strengthen Track 1.
-- [x] Milestone 4: raw-read validation within the storage allowance.
-- [x] Milestone 5: local interpretation.
-- [x] Milestone 6: Track 2 evidence and repurposing workflow.
-- [ ] Milestone 7: submission materials and code release.
-- [ ] Full acceptance checks and final handoff.
-
-### Decision log
-
-- 2026-09-05: Use the existing project as the baseline and extend it to both
-  tracks; preserve staged code and valid downloaded resources.
-- 2026-09-05: Initially use maximum practical local compute with a hard allowance of
-  250 GB additional disk usage; ask before exceeding it.
-- 2026-09-05: After the live alignment was preserved at its storage boundary,
-  the user explicitly approved increasing additional disk to 400 GB and resuming
-  that same job. Keep the original baseline, 112-CPU limit, 400-GiB RAM limit,
-  scientific inputs and storage reserves unchanged. Record and verify the
-  identity-checked resumption separately; approval alone is not proof of progress.
-- 2026-09-05: Use deterministic checks plus local inference and generate a
-  narrated pitch locally.
-- 2026-09-05: Create `HLEOT/mva-hackathon-2026` and upload code, not the large
-  data or generated analysis artifacts.
-- 2026-09-05: The user explicitly permits incremental GitHub publication.
-  Publish coherent, audited changes as they become ready instead of waiting
-  for a single bulk commit; preserve the existing local index and remote work.
-
-### Verification record
-
-Scientific entries below are the last recorded execution snapshot, not a live
-status report. Revalidate them before choosing the next stage.
-
-- Planning baseline: 113 synthetic tests passed.
-- Planning baseline: public-resource dry run required no jobs; missing
-  installation provenance metadata was noted above.
-- Implementation verification: 137 synthetic tests passed on 2026-09-05.
-- Implementation verification: 187 synthetic tests passed after ordered-rule,
-  live-process recovery, publication-race, HGVS/functional-evidence and shorter
-  PDF re-render tests. The real prioritisation dry run parses all 26 rules and
-  schedules source-invalidated outputs; no rerun triggers were suppressed.
-- Implementation verification: 198 synthetic tests passed after bounded
-  authentication preflight and separation of provenance refresh from expensive
-  read-validation checkpoints. All five scientific environments are ready.
-- Implementation verification: 223 synthetic tests passed after upstream
-  template integrity/freshness checks, live code-release verification,
-  source-linked FDA salt identities with combination-product exclusion, and
-  conservative complex-allele/indel read support. These tests do not substitute
-  for the pending real read analysis. Insertions require a matching anchor and
-  adequate inserted-base qualities; unmodelled representations cannot create
-  direct fragment-phase evidence, and unmatched indels remain inconclusive.
-- Implementation verification: 229 synthetic tests passed after isolating the
-  original BWA index environment and adding non-destructive index provenance.
-  The full read-validation dry run parses all 27 rules, schedules provenance
-  verification and does not schedule reindexing; no rerun triggers were disabled.
-- Implementation verification: 242 synthetic tests passed after disabling
-  environment proxies and rejecting redirects for all loopback inference calls.
-  At 20:14 UTC, a live synthetic probe verified the owned loopback listener,
-  unauthenticated rejection (HTTP 401), and authenticated structured inference.
-  No patient content was used in that probe; detailed receipts remain private.
-- Implementation verification: 247 synthetic tests passed after bounded local
-  finalist-review recovery. Rejected answers receive up to three local attempts
-  against unchanged evidence; each must pass the existing exact-match gate.
-  Tests cover cross-record copying, repeated failure, schema failure and
-  separation of transport retries. No evidence is silently repaired in code.
-- Implementation verification: 258 synthetic tests passed after adding
-  source-inventoried FastQC summaries and explicit QC caveats to both reports
-  and the private delivery manifest. Tests distinguish WARN/FAIL flags from
-  archive integrity, reject incomplete/mismatched reports, check PDF clipping,
-  and scope QC-report invalidation to packaging. Real report inventory and
-  integrity were checked locally; per-module results remain in private records.
-  Test scratch is explicitly project-local; this turn's three completed
-  legacy test directories were moved into that accounting without discarding files.
-- Implementation verification: 263 synthetic tests passed after adding
-  PID/start-time-checked `child_paused` and `paused_stages` status fields.
-  Sleeping, OS-paused, stale and disappearing processes remain distinct;
-  status output does not disclose raw worker records or signal any process.
-- Implementation verification: 268 synthetic tests passed after applying the
-  explicitly approved 400 GB additional-disk ceiling. Tests accept smaller
-  allowances and the exact ceiling, reject one byte above it and invalid
-  reserves, and retain the original CPU and RAM authorization boundaries.
-- Implementation verification: 285 synthetic tests passed on 2026-09-06 after
-  repairing the renderer-to-pitch page contract, preserving verified unchanged
-  model-installation identity, and archiving read reassessment evidence before
-  a second pass. Tests cover exact CRLF bytes, linked exclusion history,
-  all-contradicted failure, tampering, and stage-scoped invalidation.
-- Implementation verification: 290 synthetic tests passed after correcting a
-  metadata-only resume loop. Small outputs are freshly SHA-256 checked against
-  their saved size/hash; byte-identical rewrites do not invalidate a completed
-  stage. Changed bytes, missing hashes, changed input fingerprints and large-file
-  metadata changes still fail. A regression verifies no worker is launched and
-  no saved parent identity is rewritten when the original output bytes match.
-- Local inference: pinned model and runtime checksums verified; NVIDIA Vulkan
-  discovery and structured synthetic inference passed. Loopback authentication
-  is configured; private prompts and responses remain local.
-- Real phenotype review: completed with pinned HPO v2026-09-01, exact source
-  anchors, explicit automated review, and uncertain features excluded from scoring.
-- Real integration found bare VCF chromosome names versus chr-prefixed reference
-  names. Added length-checked alias mapping before REF-checked normalisation;
-  the synthetic alias/mismatched-length regression test passed.
-- Public Track 2 collection: 96 literature records; all 16 ChEMBL, 32 Entrez,
-  10 FDA and 7 corrected Reactome requests succeeded. Full raw responses,
-  retrieval metadata, checksums and bounded-search limitations are retained.
-- Official methods workbook and current challenge sources were downloaded at a
-  pinned Space revision. Local FFmpeg and verified speech runtime are installed.
-- The initial real annotation/prioritisation completed; source changes require
-  a refresh. Final scientific and delivery acceptance checks have not passed.
-- Documentation handoff check, 2026-09-05: the intended public GitHub repository
-  exists and the connected account has push access. The remote had no branch
-  heads when checked before the first documentation upload.
-- Documentation published and bytes verified in commits `378ebef` and `ea573c5`;
-  the original 45-entry staged index was preserved.
-- Code checkpoint `1c17d4b` published 95 audited files (470,834 bytes). A fresh
-  public clone matched every audited path, blob and executable mode. Its 187
-  tests passed in a new Python virtual environment with no system-site-packages;
-  dependency checks passed. This uses host Poppler/fonts, not a clean OS image.
-  Later changes require their own publication and reproduction verification.
-- Code checkpoint `3f65233` added preflight and provenance isolation. All 97
-  remote files/modes matched the privacy audit, the original staged index was
-  unchanged, and 198 tests passed in the same isolated reproduction environment
-  after updating its public checkout. Generated editable-install metadata was
-  preserved rather than discarded.
-- Code checkpoint `4ab33f7` published the integrity and conservative-evidence
-  changes. All 98 files/modes matched a fresh public checkout; 223 tests and
-  dependency checks passed in the isolated Python environment. Eight additional
-  invented-read BAM cases passed with the actual solved pysam 0.23.3 runtime.
-  Receipts are kept under work/private/runner, not in the public repository.
-- Code checkpoint `6ed7bab` published non-destructive BWA provenance. All 101
-  files and modes matched the public tree and isolated checkout; all 229 tests
-  and the dependency check passed there. The original staged index was unchanged.
-- Code checkpoint `083a55f` published direct loopback transport. All 102 files
-  and modes matched the public tree and isolated checkout; all 242 tests and
-  the dependency check passed there. The original staged index was unchanged.
-- Code checkpoint `f1f130b` published bounded local-review recovery. All 103
-  files and modes matched the public tree and isolated checkout; all 247 tests
-  and the dependency check passed there. The original staged index was unchanged.
-- Code checkpoint `b1fafa3` published verified QC caveat reporting. All 105
-  files/modes matched the public tree and isolated checkout; all 258 tests and
-  the dependency check passed there. A transient post-update tree mismatch
-  was rechecked before verification was recorded; the original index was preserved.
-- Code checkpoint `0f79dc3` published truthful paused-worker status. All 106
-  files/modes matched the public tree and isolated checkout; 263 tests and the
-  dependency check passed there. The original staged index was preserved.
-- Code checkpoint `8cc8c57` published the approved 400 GB ceiling. All 106 files
-  and modes matched the public tree and isolated checkout; 268 tests and the
-  dependency check passed there. The original staged index was preserved.
-- Focused commits `ea7ab52`, `47ee943` and `322caa2` published pitch-page recovery,
-  stable model installation identity, and immutable read evidence respectively.
-  Every intermediate public tree was verified. The final 110-file checkout
-  matched all bytes/modes; 285 tests and dependency checks passed in the isolated
-  Python environment. The original staged index was preserved. The subsequent
-  checksum-based resume fix requires its own verified publication/reproduction.
-- At 18:38 UTC, all seven official source/template files matched their upstream
-  Git/LFS digests at Space revision `1c761cc23d90aebe6a011fd5b0b99517df42408c`;
-  the live head had no selected-source changes. The public Synapse wiki tree
-  contained only the inspected landing wiki (last modified 2026-08-24), with no
-  citation/DOI reference found. The project-level citation remains provisional;
-  no formal reference or DOI has been invented.
-- Live execution check at 18:24 UTC: the read-download supervisor and child
-  were verified alive; additional storage was 76.88 GB of the 250 GB allowance.
-  A separate private controller was then started for the required prioritisation
-  refresh, with 16 CPUs inside the existing 112-CPU affinity, aggregate memory
-  and disk guards, private logs and its own PID/start-time receipt. It does not
-  mutate main supervisor state. Wait for both owned jobs before full resumption.
-- At 18:56 UTC, a private continuation queue was verified live in tmux session
-  `mva-resume-queue`. It waits for those exact two process owners to finish
-  successfully, then launches `./mva run --resume --tracks both` once. It aborts
-  on stopped, failed or replaced prerequisites; it does not submit to the
-  challenge, host video, delete data or send messages. Its receipt is
-  work/private/runner/resume_after_refresh_state.json. Do not launch a competing
-  full supervisor while this queue is waiting or has just launched one.
-- At 19:27 UTC, the raw-read download was complete: all eight files totalled
-  84,668,434,104 bytes; recorded hashes matched pinned upstream LFS digests,
-  current sizes/timestamps matched verification, and no transfer partials or
-  download child remained. Additional allocated storage was 108.26 GB, leaving
-  141.74 GB within the allowance. This is not completion of raw-read QC.
-- The ready read-workflow dry run exposed an environment-only BWA reindex
-  trigger. The waiting queue was temporarily paused, without stopping the live
-  annotation refresh. The original environment bytes were isolated in
-  workflow/envs/bwa_index.yaml; all six BWA executable hashes matched the read
-  consumer environment. A full read-only audit hashed five index sidecars and
-  verified all 3,366 reference contigs, without modifying index files. The
-  continuation queue was then restored and verified live. Detailed audit and
-  pause-resolution receipts remain under work/private/runner.
-- At 20:11 UTC, annotation was still actively writing under its verified
-  controller and worker, and the continuation queue was live and waiting.
-  Read-tool CLI probes confirmed the installed QC and phasing options. The
-  Synapse wiki's public attachment metadata contained only a drawing and its
-  preview, not a citation document; organiser confirmation was requested.
-- At 20:20 UTC, the annotation/prioritisation refresh was verified complete,
-  with its candidate artifact matching the worker receipt. The continuation
-  queue had successfully launched the full pipeline and exited. The first
-  resumed finalist review stopped at its exact-evidence gate. After synthetic
-  recovery tests passed and all prior owners were confirmed stopped, the full
-  run was resumed with bounded local review recovery. Detailed diagnostics
-  and attempt records remain private; read-validation acceptance is pending.
-- At 20:34 UTC, the new finalist review had passed exact evidence checks, with
-  candidate/model hashes and the finalist-table schema revalidated locally.
-  The full supervisor was running read validation; non-destructive BWA
-  provenance and alignment were scheduled, with no index rebuild. FastQC and
-  alignment were both observed live at 20:38 UTC. Additional allocated storage
-  was 112.36 GB at 20:39 UTC, within the 250 GB allowance. The streaming sorts
-  may buffer or spill reads before a final CRAM appears; follow live process
-  identity and resource counters, not file existence alone.
-- At 21:25 UTC, a private budget watcher was verified live for the current
-  alignment group. A synthetic parent/child group had first passed pause,
-  continuation, stale-identity refusal and cleanup checks; no real analysis
-  process was signalled in that test. The watcher leaves the 250 GB allowance
-  unchanged and pauses the verified group at 20 GB remaining headroom, retaining
-  memory and scratch ahead of the main 10 GB stop reserve. It never resumes
-  automatically. See work/private/runner/alignment_budget_watch_state.json and
-  the recovery instructions in docs/02_operations.md. At 21:31 UTC it was
-  watching, not pausing, and the same analysis worker remained active.
-- At 21:36 UTC, the watcher verified an OS pause of the owned alignment group
-  at 230.52 GB additional storage, before the approved 250 GB limit. Process
-  memory and temporary files remain intact; no scientific files were deleted.
-  The live-pause receipt and scientific-input snapshot are in
-  work/private/runner/paused_alignment_checkpoint.json. This is not a durable
-  completed alignment or a successful read-validation result. Resumption
-  required the storage decision and revalidation of the same live identities.
-- At 22:57 UTC, following explicit user approval of 400 GB additional disk,
-  the existing alignment group was continued without restarting it. All 42
-  saved scientific inputs matched, the execution configuration changed only
-  in its disk allowance, and the original baseline was unchanged. The old
-  watcher was stopped by its verified identity and replaced in tmux session
-  `mva-budget-watch-400gb` before continuation. At 22:58 UTC, the same worker
-  and supervisor were live, the replacement watcher was monitoring, and CPU
-  counters proved resumed computation. Additional allocated storage was
-  236.11 GB. Receipts remain under work/private/runner; this is not completion
-  of alignment, read validation, Track 2 or delivery.
-- At 23:38 UTC on 2026-09-05, the completed CRAM and index passed an independent
-  integrity audit: full file hashes, samtools quickcheck, readable index,
-  coordinate-sort header, matching sample identity, and all 3,366 reference
-  contigs. The CRAM is 21,120,249,787 bytes; its index is 1,807,237 bytes.
-  Quickcheck is not a full per-read decode. Both sorting scratch sets were
-  released by their completed tools; no source data were deleted.
-- At 23:41 UTC, measured read validation completed. One of four original
-  proposals was excluded and three remained after the planned second pass.
-  Track 2 completed at 23:42 UTC. Independent local checks on 2026-09-06
-  reproduced all five drug decisions, with zero retained hypotheses; no
-  unsupported replacement or therapeutic claim was introduced.
-- Packaging then failed at FFmpeg concatenation because pitch assembly searched
-  the old flat preview directory while the renderer used PDF-hash directories.
-  The repaired shared page lookup requires the exact current page inventory in
-  numeric order and strict slide/audio/frame coverage. A real local synthetic
-  six-slide video passed full decoding at 136.587647 seconds, with no clipped
-  slide text. This smoke test is not acceptance of the real pitch.
-- At 00:10 UTC on 2026-09-06, the overwritten first-pass read table was recovered
-  by recomputing the original proposal intervals, phase and measurements from
-  the unchanged CRAM. Its SHA-256 exactly matched the original decision receipt.
-  The original decision bytes and recovered table are now content-addressed
-  archives; the current three-row results were unchanged. New reassessments
-  archive before overwriting and link earlier decisions. Delivery verifies the
-  history and current shortlist, retaining archive hashes in its private manifest.
-- At 00:35 UTC, the normal workflow dry run scheduled only run/final manifests
-  and aggregate targets, not annotation, reindexing or alignment. Candidate
-  table bytes still matched their recorded review; changed modification times
-  invalidate their supervisor checkpoint. Use normal recovery, not fabricated
-  checkpoint updates or suppressed rerun triggers. Model re-verification now
-  preserves an unchanged installation manifest after checksum/GPU checks.
-  Additional allocated storage was approximately 129.74 GB of the 400 GB limit.
-- The normal resumed workflow completed read validation at 00:59 UTC. Its first
-  pass exactly reproduced the original archived measurements and exclusion;
-  the final three-row measurements, candidate tables, shortlist and model
-  manifest remained byte-identical. Both read decisions are now linked and
-  verified. Track 2 and provenance refreshed successfully; the CRAM was reused.
-- At 01:03 UTC, an independent local audit passed all 12 real draft artifacts:
-  the three-row official CSV, two three-page PDFs with no clipped words, both
-  official workbooks with 24 answers each, and the six-slide narrated pitch.
-  The actual MP4 is 138.129313 seconds and passed strict full decoding. Full
-  scientific hashes, read-history links, all five Track 2 decisions and the
-  reproduced public release were rechecked. This is an explicitly labelled
-  `draft_missing_disclosure`, not overall completion or a clinical conclusion.
-- The read workflow had regenerated byte-identical candidate tables after a
-  phenotype-gate refresh, changing only their modification times. The supervisor
-  formerly treated that as changed evidence on every resume. The tested fix
-  rehashes small outputs instead of rewriting saved checkpoints. A live read-only
-  check now accepts every scientific checkpoint and schedules only provenance
-  and packaging. Refresh those after publishing the fix; preserve the audited
-  draft receipts under work/private/runner/delivery_checkpoints.
-
-### Blockers and prerequisites
-
-- GitHub repository creation is no longer a prerequisite: the intended public
-  repository and connected write access have been verified. Check the remote
-  branch before each incremental upload and record the verified release commit.
-- The user has been asked asynchronously for the hosted coding account's plan
-  and data-sharing setting, required for an accurate methods disclosure.
-- A formal dataset citation was not located on the current Synapse page or its
-  wiki tree. The local report uses an explicitly provisional project reference;
-  obtain organiser confirmation before claiming full citation compliance.
-- Estimate and monitor peak additional disk usage before large downloads or
-  alignment; ask if the newly approved 400 GB allowance is insufficient.
-- The storage pause is resolved: the same alignment completed after the 400 GB
-  approval. The watcher and recovery controller are terminal. Preserve the
-  original baseline, completed CRAM and reserves; historical pause/continuation
-  receipts are not jobs to restart.
-- The real draft bundle has passed artifact checks. Publish/reproduce the final
-  checksum-based resume fix, then refresh provenance and packaging without
-  repeating verified scientific work. Missing `hosted_plan` and
-  `hosted_data_setting` in config/ai_usage.local.yaml still prevent final bundle
-  acceptance. Do not infer these values or repeat packaging unchanged to evade
-  the gate. Citation compliance also remains subject to organiser confirmation.
-
-### Exact next action
-
-Reconcile ./mva status --json with live identities, release/reproduction receipts
-and work/private/runner/delivery_recovery_independent_audit.json. All historical
-alignment, continuation, watcher and evidence-recovery owners have finished;
-do not relaunch them. The model may remain live. Publish and reproduce the final
-checksum-based resume fix if not already verified, then resume once to refresh
-provenance and packaging. The saved scientific checkpoints should all validate;
-investigate a mismatch instead of rewriting them or suppressing workflow gates.
-If that refresh has already finished, reuse its independently verified draft.
-With only disclosures/citation outstanding, request the missing information and
-do not repeat identical scientific or packaging runs. After actual confirmation,
-update the ignored disclosure file and verified citation as applicable, resume
-the changed delivery dependencies, and recheck the real bundle/public release.
-Keep real scientific text, slides, narration and detailed diagnostics local;
-only technical counts and sanitised categories enter the hosted conversation.
-
-### Outcomes and remaining work
-
-Instructions, prompt versions, commented YAML, storage accounting, a persistent
-runner, private review, both track implementations and stronger candidate gates
-are implemented. The immutable baseline is 184,345,051,136 bytes. The original
-45-entry staged index is preserved and checkpointed privately. Streaming CRAM
-and immutable pre-read proposals prevent full BAM overlap and unnecessary
-realignment when the shortlist changes. Real phenotype review, source-checked
-finalist review and public evidence acquisition are complete. Raw-read QC,
-completed alignment, measured reassessment history, and Track 2 decision gates
-have been checked locally. Scientific uncertainty remains explicit and is not
-a software failure. A reproduced code-only release and independently checked
-real draft bundle are available. Final resume-fix publication, its provenance
-refresh, accurate user disclosure and citation confirmation remain outstanding.
-Challenge submission, video hosting, restricted-data lifecycle actions and any
-required deletion confirmation remain explicit user handoff tasks.
+Comment biological assumptions, reference/coordinate conventions, units,
+evidence thresholds, failure recovery and cleanup prerequisites for a
+bioinformatician. Avoid gratuitous abstractions, duplicate scripts and stale
+operational diaries. Preserve the original BWA index environment bytes: editing
+that definition unnecessarily can trigger expensive reindexing.
+
+## 4. Execution and acceptance milestones
+
+1. **Preflight and reuse.** Verify inputs, pinned resource manifests, account
+   access where needed, storage, tool availability and live process identities.
+   Match PID and creation time; never restart a healthy or paused worker merely
+   because a tool wait timed out. Reuse verified completed resources and CRAM.
+2. **Phenotype review.** Local code prepares a bounded, numbered-source request.
+   Codex returns structured present/absent/uncertain assertions. Local gates
+   require active pinned HPO terms, exact quotes and conservative handling of
+   negation, family history, conflicts and uncertain semantic mappings.
+3. **Track 1 computation.** Verify GRCh38 contig-length aliases and REF alleles;
+   normalise/split with bcftools; run offline merged VEP and compatible Exomiser.
+   Compare genome-wide ranking with the historical known-gene-prioritised policy.
+   Both alleles must support a pair; exclude same-locus artifacts and observed
+   cis pairs. Retain uncertainty about phase, causality and non-coding coverage.
+4. **Finalist review and raw-read validation.** Codex selects 1–10 supplied
+   candidates using exact evidence fields, rationale and uncertainty. Download
+   only missing bytes, perform FastQC/MultiQC, stream alignment into CRAM once,
+   measure read support and phase, then reassess. Archive exact pre-reassessment
+   measurements and decisions before replacing working tables. Keep real QC
+   WARN/FAIL flags; a valid artifact is not an all-module PASS claim.
+5. **Track 2.** Acquire public evidence using fixed patient-independent queries.
+   Codex examines bounded source records alongside permitted case evidence.
+   Require correct compound identity, regulatory evidence, variant mechanism,
+   exact source anchors, primary functional evidence where claimed, safety,
+   opposing evidence and a falsifiable experiment. A second Codex critique is
+   not independent biological validation. Zero retained hypotheses is valid.
+6. **Delivery.** Require genuine current Codex review receipts, full scientific
+   integrity, current official rules/templates, truthful AI disclosure, dataset
+   citation and acknowledgement. Build both reports in Markdown/PDF, the
+   official Track 1 CSV, two methods workbooks, slides/script and locally narrated
+   MP4 at most 180 seconds. Verify PDF layout, workbook completeness, CSV schema,
+   artifact hashes, video streams/duration and a strict full decode.
+7. **Release and handoff.** Publish coherent audited code increments, then verify
+   the final public tree and reproduce synthetic tests in an isolated environment.
+   Document real artifact paths and remaining user actions. Do not claim clinical
+   validation, successful submission or overall completion from draft files.
+
+Local workers checkpoint with `awaiting_codex_review` when interpretation or
+confirmed provider terms are missing. They do not download a replacement model,
+call a hosted API, invent answers, or endlessly retry a review. Codex resumes
+the relevant stage after supplying an actual exact-input response. See the
+response format and recovery steps in [operations](02_operations.md).
+
+## 5. Space-aware operation
+
+The user authorises autonomous deletion/compaction of unnecessary task files.
+Use `./mva cleanup` to inspect and `./mva cleanup --apply` to remove known
+disposable caches and obsolete synthetic rendering scratch while idle. This
+narrow cleanup is also enabled between stages. `--compact-resources` verifies
+installed resources and removes redundant installation archives; retain URLs,
+original digests and installed-file verification manifests.
+
+Budget peak growth before each large stage and monitor it while running. Count
+partial downloads, extraction overlap, environments, temporary sort runs and
+outputs. Reuse valid data rather than copying or recomputing it. Do not recompress
+FASTQ.gz, VCF.gz, CRAM, indexed databases or already-compressed caches. Do not
+hard-link independent mutable outputs or remove package-cache files that active
+environments depend on. Unknown or unique scratch is not automatically disposable.
+
+Cleanup must resolve exact targets, refuse symlinks and live workers, journal
+deletions, and report reclaimed allocated bytes. Do not remove source data,
+expensive verified results, scientific decision trails or current deliverables.
+Do not retain another giant backup of a reproducibly downloadable archive.
+
+## 6. Progress, decisions and next action
+
+- Previous execution completed both scientific lanes and checked a 12-artifact
+  private draft, including a 138.129313-second pitch. It used the now-rejected
+  local model. Those reviews are **historical, not Codex reviews**, and no final
+  challenge submission was made. Detailed evidence stays in private receipts.
+- 2026-09-06: user changed interpretation to Codex here and requested autonomous
+  space-aware cleanup. The owned model server was stopped, its weights/runtime
+  and obsolete token removed, and small provenance archived privately. Source
+  data, installed scientific tools, completed CRAM and prior evidence remain.
+- Implemented Codex review checkpoints, removed the inference client/model stage,
+  added safe cleanup and archive compaction with installed-file integrity checks.
+  All 295 synthetic tests passed, including an actual worker review-pause test,
+  cleanup refusal tests, compacted-resource corruption and reinstall recovery.
+- Cleanup reclaimed approximately 86.3 GB. Exomiser's installed files passed an
+  independent full SHA-256 check after compaction; VEP passed its installed
+  metadata/shard/index inventory checks. Offline preflight confirms all base
+  scientific resources remain ready; authentication is deliberately unverified
+  offline and final scientific provenance needs refresh for the changed code.
+  The original 45-entry staged index remains byte-identical. Public release
+  verification and isolated reproduction are recorded under work/private/runner.
+- Current scientific outputs must not be relabelled or packaged as Codex-reviewed.
+  New review gates require actual responses and confirmed data-use terms. Dataset
+  citation and final methods disclosures still require truthful confirmation.
+
+**Exact next action:** finish verifying this architecture/cleanup change and the
+audited code release. Do not restart historical alignment, watcher or recovery
+jobs. The user's earlier execution goal is paused; this cleanup does not resume
+the full analysis. When execution is resumed and provider terms are confirmed,
+use `./mva run --tracks both --resume`, handle `./mva reviews` in this Codex
+session, preserve all previous attribution, and refresh only affected science
+and delivery dependencies. Never fabricate checkpoints to conceal stale results.
 
 ## 7. Reference sources
 
-The following public sources informed the plan. Recheck mutable requirements
-before submission and record the versions used during implementation.
-
 - [Official hackathon application](https://sagebio-rare-disease-real-kid-mva-hackathon-2026.hf.space/)
-- [Official Track 1 instructions](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/blob/main/tabs/submit_track1.py)
-- [Official Track 2 instructions](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/blob/main/tabs/submit_track2.py)
 - [Official rules](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/blob/main/tabs/rules.py)
-- [Official clarification of provider terms and data handling](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/discussions/2)
-- [Official submission templates](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/tree/main/static/templates)
-- [OpenAI guidance on persistent execution plans](https://developers.openai.com/cookbook/articles/codex_exec_plans)
-- [OpenAI prompting guidance: outcomes, context, and boundaries](https://learn.chatgpt.com/docs/prompting)
-- [OpenAI guidance on non-interactive session resumption](https://learn.chatgpt.com/docs/non-interactive-mode)
-- [Qwen3-30B-A3B model and quantisations](https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF)
-- [llama.cpp build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md)
-- [samtools sort documentation](https://www.htslib.org/doc/samtools-sort.html)
-- [samtools markdup documentation](https://www.htslib.org/doc/samtools-markdup.html)
-- [Reactome Content Service](https://reactome.org/dev/content-service)
-- [ChEMBL data services](https://chembl.gitbook.io/chembl-interface-documentation/web-services/chembl-data-web-services)
-- [DailyMed web services](https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm)
+- [Official templates](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/tree/main/static/templates)
+- [Provider terms and data handling](https://huggingface.co/spaces/SageBio/rare-disease-real-kid-mva-hackathon-2026/discussions/2)
+- [Codex local code execution](https://learn.chatgpt.com/docs/codex/cli)
+- [Codex authentication and applicable data policies](https://learn.chatgpt.com/docs/auth)

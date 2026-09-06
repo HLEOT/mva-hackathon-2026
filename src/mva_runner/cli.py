@@ -30,9 +30,27 @@ def main(argv=None) -> int:
         p.add_argument("--foreground", action="store_true")
     sub.add_parser("package")
     sub.add_parser("stop")
+    sub.add_parser("reviews", help="List Codex review checkpoints without exposing case evidence")
+    cleanup = sub.add_parser("cleanup", help="Inspect or remove verified disposable project files")
+    cleanup.add_argument("--apply", action="store_true", help="Delete the exact verified targets; default is dry run")
+    cleanup.add_argument("--compact-resources", action="store_true", help="Verify installed payloads and remove redundant download archives")
     args = parser.parse_args(argv)
     cfg = load_jsonish(EXECUTION)
-    if args.command == "preflight":
+    if args.command == "cleanup":
+        from .maintenance import clean_disposable, compact_resources
+        report = clean_disposable(apply=args.apply)
+        compact = compact_resources(apply=args.apply) if args.compact_resources else None
+        # Full target inventories stay in private receipts, not public status.
+        print(json.dumps({"status": report["status"], "removed_files": report["removed_files"],
+            "reclaimed_bytes": report["reclaimed_bytes"], "candidate_files": len(report["files"]),
+            "resource_compaction": {key: {k:v for k,v in value.items() if k != "files"}
+                for key,value in compact.items()} if compact else None}, indent=2))
+        return 0
+    elif args.command == "reviews":
+        from .codex_review import pending_reviews, terms_confirmed
+        print(json.dumps({"private_review_terms_confirmed": terms_confirmed(), "pending": pending_reviews()}, indent=2))
+        return 0
+    elif args.command == "preflight":
         establish_baseline()
         from .preflight import collect
         report = collect(cfg, offline=args.offline)

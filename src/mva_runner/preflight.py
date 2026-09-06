@@ -88,7 +88,7 @@ def github_destination(repository: str) -> dict:
 
 
 def collect(cfg: dict, *, offline: bool = False) -> dict:
-    from .local import _healthy
+    from .codex_review import pending_reviews, terms_confirmed
     report = {"configuration_within_authorisation": limits_valid(cfg["limits"]),
               "limits": cfg["limits"], "storage": require_space(),
               "host": {"available_cpus": len(os.sched_getaffinity(0)), "physical_memory_bytes": psutil.virtual_memory().total}}
@@ -107,11 +107,8 @@ def collect(cfg: dict, *, offline: bool = False) -> dict:
         {"status": "insecure_token_file"})
     report["github"] = ({"status": "not_checked_offline"} if offline else
                          github_destination(cfg["delivery"]["github_repository"]))
-    try:
-        report["local_model_health"] = "healthy_owned_process" if _healthy() else "prepare_or_recover_model_stage"
-    except Exception as exc:
-        report["local_model_health"] = "invalid_configuration_or_state"
-        report["model_error_category"] = type(exc).__name__
+    report["interpretation"] = {"reviewer": "active Codex session", "local_inference_required": False,
+        "private_review_terms_confirmed": terms_confirmed(), "pending_reviews": pending_reviews()}
     report["host_delivery_tools"] = {name: bool(shutil.which(name)) for name in ["tmux", "pdftoppm", "pdftotext"]}
     report["local_delivery_tools"] = {
         "ffmpeg": os.access(PROJECT_ROOT / ".conda/delivery/bin/ffmpeg", os.X_OK),

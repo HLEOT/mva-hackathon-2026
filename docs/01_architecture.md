@@ -3,22 +3,17 @@
 <!-- Keep implementation details here; the execution plan owns live progress. -->
 
 The project combines a persistent local supervisor with a Snakemake scientific
-workflow. The hosted coding agent may inspect code, synthetic fixtures and
-sanitised status, but patient-level evidence is interpreted only by local code
-and authenticated loopback inference.
-
-The inference client allows only its configured loopback health and completion
-URLs. It explicitly disables environment-derived proxies and refuses every HTTP
-redirect, so resumed jobs do not rely on inherited `NO_PROXY` settings. This
-restriction applies to private inference, not the separate public-download
-client. Python's [proxy and redirect handlers](https://docs.python.org/3/library/urllib.request.html)
-are configured explicitly; synthetic tests check that request bodies and
-credentials never follow a redirected destination.
+workflow. Codex in the active conversation directs interpretation; scientific
+programs and deterministic validation run on the PC. File-backed review
+checkpoints replace the separate inference model. There is no AI network client
+or nested agent. Private review remains disabled until the actual Codex account's
+provider terms and permission are confirmed; local tool execution does not imply
+local Codex inference. See [operations](02_operations.md) for the exact contract.
 
 ## Data flow
 
 ```text
-Pinned local model ──> phenotype review ──> Track 1 ranking ──> finalist review
+Codex review ────────> phenotype gates ──> Track 1 ranking ──> Codex finalist review
                                                 │                    │
                                                 │              FASTQ acquisition
                                                 │                    │
@@ -26,7 +21,7 @@ Pinned local model ──> phenotype review ──> Track 1 ranking ──> fina
                                                                      │
 Fixed public-source queries ──> evidence corpus ───────────────────────┤
                                                                      v
-                                                       Local Track 2 synthesis
+                                                       Codex Track 2 review
                                                                      │
                                                                      v
                                                    Private submission materials
@@ -39,13 +34,13 @@ are not promoted into biological proof.
 
 ## Code responsibilities
 
-- `src/mva_runner/`: resource accounting, checkpoints, process ownership, local
-  model review, report/workbook/video delivery, and publication audit.
+- `src/mva_runner/`: resource accounting, safe cleanup, checkpoints, process
+  ownership, Codex review files, report/workbook/video delivery and publication audit.
 - `src/mva_track1/`: private data handling, VCF/phenotype parsing, ranking,
   read support, submission schema and scientific provenance.
 - `src/mva_track2/`: public-source collection and locally reviewed,
   evidence-linked repurposing hypotheses.
-- `prompts/local/`: versioned local interpretation contracts. Their outputs
+- `prompts/review/`: versioned Codex interpretation contracts. Their outputs
   require schema and source checks; they are not human reviews.
 
 ## Ordered scientific rules
@@ -124,8 +119,8 @@ launching a duplicate. Atomic private checkpoints retain stage fingerprints,
 outputs, attempts and technical error categories. Selected-stage completion is
 not overall project completion or verification of code publication.
 
-Finalist selection allows at most three local interpretation attempts. Rejected
-answers and validation reasons are returned only to the local model, alongside
+Finalist selection allows at most three explicit interpretation attempts. Rejected
+answers and validation reasons are returned to Codex as private files, alongside
 the unchanged original evidence. Candidate IDs and evidence field names are
 schema-constrained; every cited value must exactly match its own candidate's
 record. Code never substitutes a matching value to rescue a conclusion. The
@@ -138,7 +133,7 @@ measured reads or reserving alignment scratch space again. The manifest records
 both ranking policies, ordered rule files, source modules, runtime configuration
 and launchers alongside scientific inputs and solved environments.
 
-All task caches, downloads, models, environments, scratch and outputs count
+All task caches, downloads, environments, scratch and outputs count
 against the additional disk allowance. Owner-only private directories and logs
 remain excluded from the explicit GitHub publication allowlist. See
 [operations](02_operations.md) and [submission handoff](03_submission.md).

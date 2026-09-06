@@ -17,7 +17,7 @@ def alignment_threads(total: int) -> dict:
 
     Five samtools processes run concurrently. Their -@ values are additional
     workers. Two sorts each use at most (io+1)*8 GiB of buffers. With 96 slots,
-    the two buffers total 112 GiB, leaving room for BWA, CRAM and the model.
+    the two buffers total 112 GiB, leaving room for BWA and CRAM processing.
     """
     if total < 16:
         raise Track1Error("Streaming alignment requires at least 16 allocated CPUs")

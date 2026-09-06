@@ -11,21 +11,11 @@ supervisor:
   heartbeat_seconds: 10
   transient_attempts: 5
   retry_seconds: 30
-model:
-  runtime_release: b10819
-  runtime_archive: llama-b10819-bin-ubuntu-vulkan-x64.tar.gz
-  runtime_sha256: 2175737ab85506e7639fc7f8c84b5247fd607cc6e7030825c6dcadd4279f62e3
-  repository: Qwen/Qwen3-30B-A3B-GGUF
-  filename: Qwen3-30B-A3B-Q4_K_M.gguf
-  context_tokens: 32768
-  output_tokens: 8192
-  host: 127.0.0.1
-  port: 18081
-  seed: 20260905
-  temperature: 0.7
-  top_p: 0.8
-  top_k: 20
-  presence_penalty: 1.5
+# Interpretation belongs to the active Codex conversation, not a downloaded
+# model, nested agent, API client, or inference server. Workers use review files.
+cleanup:
+  # Only allowlisted disposable files, between stages while no child is live.
+  automatic: true
 delivery:
   hf_username: ErnieTn
   github_repository: HLEOT/mva-hackathon-2026

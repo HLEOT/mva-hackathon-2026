@@ -1,8 +1,8 @@
-"""Evidence-constrained local reviews; source text never leaves this machine.
+"""Evidence-constrained Codex reviews with deterministic checks on this PC.
 
 HPO membership and verbatim source anchors are checked independently of the
-model. Ambiguous, conflicting, or lexically unsupported assertions do not
-become positive phenotype features merely because the model proposed them.
+reviewer. Ambiguous, conflicting, or lexically unsupported assertions do not
+become positive phenotype features merely because Codex proposed them.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from mva_track1.phenotype import HPO_PATTERN, validate_proband_config
 from mva_track1.resources import _download
 from mva_track1.submission import _candidate_rows, reviewed_finalists
 from mva_track1.vcf import inspect_vcf
-from .local import MANIFEST, InterpretationError, infer
+from .codex_review import InterpretationError, review_evidence, review_receipt
 
 HPO_RELEASE = "v2026-09-01"
 HPO_SHA256 = "93dace952fcb3ec4728818857f6ba76bc2d5312f4d83266519b8694b8e798f22"
@@ -128,22 +128,22 @@ def phenotype() -> None:
             "paragraph_id": {"type": "string"}, "quote": {"type": "string"}, "reason": {"type": "string"}},
             "required": ["hpo_id", "status", "paragraph_id", "quote", "reason"], "additionalProperties": False}}},
         "required": ["assertions"], "additionalProperties": False}
-    answer = infer((PROJECT_ROOT / "prompts/local/phenotype.md").read_text(),
+    answer = review_evidence((PROJECT_ROOT / "prompts/review/phenotype.md").read_text(),
                    json.dumps({"paragraphs": paragraphs, "ontology_suggestions": suggestions}), schema, "phenotype")
     features, audit = validate_assertions(answer["assertions"], paragraphs, terms, aliases)
     info = inspect_vcf(SOURCE_DIR / "WGS_EX2312012_HGWCNDSX7.vcf.gz")
     if len(info["samples"]) != 1:
         raise InterpretationError("Automated sample selection requires exactly one VCF sample")
-    review = {"review_mode": "automated_local", "reviewed_at": utc_now(), "source_sha256": sha256_file(docx),
+    review = {"review_mode": "codex_assisted", "reviewed_at": utc_now(), "source_sha256": sha256_file(docx),
               "ontology_release": HPO_RELEASE, "ontology_sha256": HPO_SHA256,
-              "model_manifest_sha256": sha256_file(MANIFEST), "features": features, "assertions": audit}
+              "codex_review": review_receipt("phenotype"), "features": features, "assertions": audit}
     atomic_write_json(PROJECT_ROOT / "work/private/phenotype_review.json", review)
     if not features["present"]:
         raise InterpretationError("No positive phenotype survived source/ontology validation; private review needed")
     cfg = {"proband_id": "PROBAND01", "vcf_sample_id": info["samples"][0], "sex": "UNKNOWN",
            "hpo_present": features["present"], "hpo_absent": features["absent"], "hpo_uncertain": features["uncertain"],
-           "reviewed_by": "local-model:Qwen3-30B-A3B", "reviewed_at": utc_now()[:10], "review_mode": "automated_local",
-           "notes": "Automated source-anchored research review; uncertain assertions excluded from phenotype scoring."}
+           "reviewed_by": "Codex", "reviewed_at": utc_now()[:10], "review_mode": "codex_assisted",
+           "notes": "Codex source-anchored research review; uncertain assertions excluded from phenotype scoring."}
     atomic_write_json(PROJECT_ROOT / "config/proband.local.yaml", cfg)
     validate_proband_config(PROJECT_ROOT / "config/proband.local.yaml")
 
@@ -163,11 +163,11 @@ def validate_selections(selections: list[dict], candidates: dict) -> None:
                 raise InterpretationError("Finalist evidence does not match the supplied record")
 
 
-def infer_finalist_selections(system: str, payload: dict, schema: dict) -> tuple[dict, list[dict]]:
-    """Allow at most three local reviews; never repair scientific values in code.
+def review_finalist_selections(system: str, payload: dict, schema: dict) -> tuple[dict, list[dict]]:
+    """Allow at most three explicit reviews; never repair scientific values in code.
 
     A copied field can be real but belong to another candidate. Return the
-    rejected response and validation reason to the local model for a fresh
+    rejected response and validation reason to Codex for a fresh
     review of the original evidence. Every replacement must pass the unchanged
     exact-match gate. Retain rejected attempts privately and fail closed when
     the bounded review cannot satisfy it; do not retry an identical cached input.
@@ -181,11 +181,11 @@ def infer_finalist_selections(system: str, payload: dict, schema: dict) -> tuple
             request["validation_feedback"] = feedback
         answer = None
         try:
-            answer = infer(system, json.dumps(request), schema, "finalists")
+            answer = review_evidence(system, json.dumps(request), schema, "finalists")
             validate_selections(answer["selections"], candidates)
         except InterpretationError as exc:
             attempts.append({"attempt": attempt, "status": "rejected", "reason": str(exc)})
-            atomic_write_json(receipt, {"review_mode": "automated_local", "attempts": attempts,
+            atomic_write_json(receipt, {"review_mode": "codex_assisted", "attempts": attempts,
                                        "completed": False, "updated_at": utc_now()})
             feedback = {"attempt": attempt, "validation_error": str(exc), "previous_response": answer,
                 "instruction": "Re-evaluate the original candidates. Each cited field and exact string value "
@@ -194,17 +194,17 @@ def infer_finalist_selections(system: str, payload: dict, schema: dict) -> tuple
                 "The original evidence and acceptance rules have not changed."}
             continue
         attempts.append({"attempt": attempt, "status": "accepted"})
-        atomic_write_json(receipt, {"review_mode": "automated_local", "attempts": attempts,
+        atomic_write_json(receipt, {"review_mode": "codex_assisted", "attempts": attempts,
                                    "completed": True, "updated_at": utc_now()})
         return answer, attempts
-    raise InterpretationError("Finalist review failed evidence validation after three local attempts")
+    raise InterpretationError("Finalist review failed evidence validation after three review attempts")
 
 
 def finalists() -> None:
     candidate_path = PROJECT_ROOT / "results/private/candidates_ranked.tsv"
     all_candidates = _candidate_rows(candidate_path)
     shortlist = dict(list(all_candidates.items())[:40])
-    # Add top genome-wide and historical candidates so the model sees the
+    # Add top genome-wide and historical candidates so Codex sees the
     # effect of the known-gene prior. All selected IDs must still pass the new
     # evidence policy; excluded cis/same-locus historical pairs cannot return.
     baseline_path = candidate_path.with_name("candidates_baseline.tsv")
@@ -227,7 +227,7 @@ def finalists() -> None:
                 "required": ["field", "value"], "additionalProperties": False}}},
             "required": ["candidate_id", "finding_type", "rationale", "uncertainty", "evidence"], "additionalProperties": False}}},
         "required": ["selections"], "additionalProperties": False}
-    answer, attempts = infer_finalist_selections((PROJECT_ROOT / "prompts/local/finalists.md").read_text(),
+    answer, attempts = review_finalist_selections((PROJECT_ROOT / "prompts/review/finalists.md").read_text(),
         {"candidates": list(shortlist.values()), "phenotype": load_jsonish(PROJECT_ROOT / "config/proband.local.yaml")}, schema)
     output = io.StringIO()
     fields = ["candidate_id", "selected", "final_rank", "finding_type", "review_reason"]
@@ -235,7 +235,7 @@ def finalists() -> None:
     writer.writeheader()
     for rank, item in enumerate(answer["selections"], 1):
         writer.writerow({"candidate_id": item["candidate_id"], "selected": "YES", "final_rank": rank,
-                         "finding_type": item["finding_type"], "review_reason": "Automated local research review: " +
+                         "finding_type": item["finding_type"], "review_reason": "Codex-assisted research review: " +
                          item["rationale"] + " Uncertainty: " + item["uncertainty"]})
     path = PROJECT_ROOT / "config/finalists.local.tsv"
     atomic_write_text(path, output.getvalue())
@@ -243,9 +243,9 @@ def finalists() -> None:
     # reorder the active shortlist without invalidating this upstream stage.
     atomic_write_text(PROJECT_ROOT / "work/private/finalists_proposed.tsv", output.getvalue())
     reviewed_finalists(path, candidate_path)
-    atomic_write_json(PROJECT_ROOT / "work/private/finalist_review.json", {"review_mode": "automated_local",
+    atomic_write_json(PROJECT_ROOT / "work/private/finalist_review.json", {"review_mode": "codex_assisted",
         "reviewed_at": utc_now(), "candidates_sha256": sha256_file(candidate_path),
-        "model_manifest_sha256": sha256_file(MANIFEST), "validation_attempts": attempts,
+        "codex_review": review_receipt("finalists"), "validation_attempts": attempts,
         "selections": answer["selections"]})
 
 

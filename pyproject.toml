@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mva-track1"
 version = "0.1.0"
-description = "Resumable local-only MVA Hackathon 2026 variant and repurposing workflow"
+description = "Codex-directed MVA Hackathon 2026 analysis with resumable local computation"
 requires-python = ">=3.12"
 dependencies = ["PyYAML>=6,<7", "psutil>=7,<8", "jsonschema>=4.25,<5", "requests>=2.32,<3",
                 "huggingface_hub>=0.34,<0.35", "reportlab>=4.4,<5", "openpyxl>=3.1,<4"]

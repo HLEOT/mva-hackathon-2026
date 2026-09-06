@@ -75,7 +75,7 @@ def test_stage_fingerprints_include_ordered_rules_without_cross_stage_churn(tmp_
     after = {name: supervisor.fingerprint(stage, state, tmp_path) for name, stage in stages.items()}
     assert before["validate_reads"] != after["validate_reads"]
     assert before["prioritise"] == after["prioritise"]
-    assert before["model"] == after["model"]
+    assert "model" not in before and "model" not in after
     assert "src/mva_track2/sources.py" in stages["public_evidence"].inputs
     assert "src/mva_runner/render.py" in stages["package"].inputs
 
@@ -205,6 +205,30 @@ def test_stop_recovers_owned_child_when_supervisor_is_gone(isolated_runner):
         assert "Stopped 1" in supervisor.request_stop()
         assert not supervisor.is_live(identity)
         assert supervisor.read_state()["status"] == "stopped"
+    finally:
+        child.wait(timeout=10)
+
+
+def test_review_checkpoint_waits_once_and_blocks_only_dependants(isolated_runner, monkeypatch):
+    root, state_dir = isolated_runner
+    stage = supervisor.Stage('synthetic', (), (), ('result.txt',))
+    downstream = supervisor.Stage('downstream', ('synthetic',), (), ())
+    monkeypatch.setattr(supervisor, 'stages', lambda tracks: [stage, downstream])
+    receipt = state_dir / 'synthetic.result.json'
+    result = json.dumps({'status': 'awaiting_codex_review', 'error_category': 'ReviewRequired', 'retryable': False})
+    code = ('import pathlib,time; time.sleep(0.1); '
+            f'pathlib.Path({str(receipt)!r}).write_text({result!r})')
+    child = subprocess.Popen([sys.executable, '-c', code], cwd=root, start_new_session=True)
+    try:
+        supervisor.atomic_write_json(state_dir / 'state.json', {'stages': {'synthetic': {
+            'status': 'running', 'child': supervisor.process_identity(child.pid), 'attempts': 1,
+            'fingerprint': supervisor.fingerprint(stage, {}, root), 'log': 'logs/synthetic.log'}}})
+        monkeypatch.setattr(supervisor.subprocess, 'Popen', lambda *args, **kwargs: pytest.fail('review was retried'))
+        assert supervisor.run() == 2
+        state = supervisor.read_state()
+        assert state['status'] == state['stages']['synthetic']['status'] == 'awaiting_codex_review'
+        assert state['stages']['synthetic']['attempts'] == 1
+        assert state['stages']['downstream']['status'] == 'blocked_dependency'
     finally:
         child.wait(timeout=10)
 

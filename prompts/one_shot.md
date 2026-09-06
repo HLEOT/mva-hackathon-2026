@@ -1,9 +1,9 @@
-# One-shot model handoff
+# One-prompt Codex handoff
 
 <!-- Keep this prompt aligned with docs/00_execution_plan.md. The plan owns
      detailed requirements and progress; this file is the copy-and-paste entry. -->
 
-Copy the following block into a coding model with access to this checkout.
+Copy the following block into Codex with access to this checkout.
 The complete plan is [docs/00_execution_plan.md](../docs/00_execution_plan.md).
 Use the same prompt to start or resume; it does not promise unlimited model
 runtime or bypass service limits.
@@ -27,11 +27,25 @@ unrelated staged files, secrets, source data, or patient-derived artifacts.
 
 Use clear comments for a bioinformatician and the ordered file structure in
 this plan. Work through the milestones without asking whether to continue.
-Use up to 112 CPUs, 400 GiB RAM, and the available GPU, with no paid cloud
+Use up to 112 CPUs and 400 GiB RAM, with no paid cloud
 services. Enforce a combined limit of 400 GB additional disk usage beyond the
 existing project footprint. Ask before exceeding that allowance.
 
-Keep private interpretation local. Record automated reviews honestly, preserve
+You, Codex in this conversation, perform interpretation; the actual scientific
+programs run on this PC. Do not download an LLM, install an inference server,
+invoke a hosted AI API, or launch another coding agent. Use the file-backed
+Codex review checkpoints and validate responses locally. Confirm the organiser's
+provider terms before private case evidence enters this conversation; do not
+invent account settings or create a new AI account.
+
+Be space-aware. Autonomously remove verified disposable caches, obsolete task
+scratch and redundant installation archives, retaining small provenance and
+restoration metadata. Use the tested cleanup command, verify replacements before
+deletion, preserve source data and expensive results, and never touch active-job
+scratch or recompress indexed/already-compressed scientific files. Reuse validated
+outputs and check peak-growth headroom before large jobs. Keep the baseline fixed.
+
+Record Codex reviews honestly; never relabel earlier local-model outputs. Preserve
 scientific uncertainty, and never invent evidence, credentials, approvals,
 successful checks, or completion. Checkpoint long-running work and resume it
 after interruptions. Continue independent work when another stage is blocked.

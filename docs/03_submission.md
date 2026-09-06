@@ -33,7 +33,9 @@ Record the actual hosted coding account plan and data-sharing/model-training
 setting in ignored `config/ai_usage.local.yaml`, using fields `hosted_plan` and
 `hosted_data_setting`. The model cannot infer those account settings. Missing
 disclosure leaves the bundle a draft and prevents final acceptance. Distinguish
-hosted code assistance from local Qwen analysis of private data.
+Codex-assisted interpretation from local scientific computation. A new bundle
+requires actual Codex review receipts and confirmed provider terms; previous
+local-model drafts retain their original provenance and cannot be relabelled.
 
 Use the official methods workbook and current challenge instructions, retaining
 retrieval dates, revisions and hashes. Packaging compares cached bytes with the
@@ -69,7 +71,7 @@ The user retains these external actions:
 - Recheck applicable deadlines, quotas and data-lifecycle obligations.
 - Perform required post-challenge deletion and send any required confirmation.
 
-No challenge submission, video hosting, deletion or email is performed merely
+No challenge submission, video hosting, restricted-data purge or email is performed merely
 by building the bundle. Never mark these actions complete without evidence.
 
 Authoritative requirements:

@@ -52,10 +52,7 @@ def retryable_failure(exc: BaseException) -> bool:
 
 
 def execute(name: str) -> None:
-    if name == "model":
-        from .local import prepare
-        prepare()
-    elif name == "public_evidence":
+    if name == "public_evidence":
         from mva_track2.evidence import prepare
         prepare()
     elif name in {"phenotype", "finalists"}:
@@ -86,8 +83,9 @@ def main() -> int:
         execute(args.stage)
     except Exception as exc:
         traceback.print_exc()  # Parent redirects this to an owner-only log.
-        retryable = retryable_failure(exc)
-        atomic_write_json(args.receipt, {"status":"failed", "error_category":type(exc).__name__,
+        from .codex_review import ReviewRequired
+        retryable = False if isinstance(exc, ReviewRequired) else retryable_failure(exc)
+        atomic_write_json(args.receipt, {"status":"awaiting_codex_review" if isinstance(exc, ReviewRequired) else "failed", "error_category":type(exc).__name__,
                                         "retryable":retryable,"finished_at":utc_now()})
         return 1
     atomic_write_json(args.receipt, {"status":"complete","finished_at":utc_now()})

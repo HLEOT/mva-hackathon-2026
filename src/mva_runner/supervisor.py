@@ -47,20 +47,23 @@ def stages(tracks: str = "both") -> list[Stage]:
     read_rules = tuple("workflow/rules/" + name for name in (
         "00_targets.smk", "20_resources.smk", "50_alignment.smk", "60_validation.smk", "70_provenance.smk"))
     scientific_envs = tuple("workflow/envs/" + name + ".yaml" for name in ("launcher", "hts", "annotation"))
+    def review_inputs(purpose: str) -> tuple[str, ...]:
+        # A newly supplied or edited response invalidates only its review lane.
+        responses = (PROJECT_ROOT / "work/private/reviews").glob(purpose + "/*.response.json")
+        return ("src/mva_runner/codex_review.py", "config/ai_usage.local.yaml") + tuple(sorted(
+            str(path.relative_to(PROJECT_ROOT)) for path in responses))
     result = [
-        Stage("model", (), ("config/execution.yaml", "src/mva_runner/local.py"),
-              ("resources/public/models/install_manifest.json",), 22_000_000_000),
         Stage("public_evidence", (), ("config/track2.yaml", "src/mva_track2/evidence.py", "src/mva_track2/sources.py"),
               ("resources/public/evidence/manifest.json",), 1_000_000_000),
-        Stage("phenotype", ("model",), ("data/gated/source/Challenge_Clinical_Phenotype_1.docx",
+        Stage("phenotype", (), ("data/gated/source/Challenge_Clinical_Phenotype_1.docx",
               "data/gated/source/WGS_EX2312012_HGWCNDSX7.vcf.gz", "src/mva_runner/review.py",
-              "prompts/local/phenotype.md"), ("config/proband.local.yaml", "work/private/phenotype_review.json")),
+              "prompts/review/phenotype.md") + review_inputs("phenotype"), ("config/proband.local.yaml", "work/private/phenotype_review.json")),
         Stage("prioritise", ("phenotype",), ("config/config.yaml", "workflow/Snakefile",
               "src/mva_track1/vcf.py", "src/mva_track1/ranking.py", "src/mva_track1/exomiser.py")
               + scientific_inputs + prioritisation_rules + scientific_envs,
               ("results/private/candidates_ranked.tsv", "results/private/candidates_baseline.tsv",
                "results/private/run_manifest.json"), 5_000_000_000),
-        Stage("finalists", ("prioritise", "model"), ("src/mva_runner/review.py", "prompts/local/finalists.md"),
+        Stage("finalists", ("prioritise",), ("src/mva_runner/review.py", "prompts/review/finalists.md") + review_inputs("finalists"),
               ("work/private/finalists_proposed.tsv", "work/private/finalist_review.json")),
         Stage("download_reads", ("finalists",), ("config/config.yaml", "src/mva_track1/download.py"),
               ("work/private/runner/reads_downloaded.json",)),
@@ -72,8 +75,8 @@ def stages(tracks: str = "both") -> list[Stage]:
               ("config/finalists.local.tsv", "results/private/read_validation.tsv", "work/private/read_reassessment.json"), 95_000_000_000),
     ]
     if tracks == "both":
-        result.append(Stage("track2", ("public_evidence", "validate_reads", "model"),
-                      ("config/track2.yaml", "src/mva_track2/analysis.py", "prompts/local/track2.md"),
+        result.append(Stage("track2", ("public_evidence", "validate_reads"),
+                      ("config/track2.yaml", "src/mva_track2/analysis.py", "prompts/review/track2.md") + review_inputs("track2_*"),
                       ("results/private/track2/hypotheses.json", "results/private/track2/evidence.tsv")))
     # Provenance owns its manifest independently of the expensive read stage.
     # A renderer/code-release edit updates recorded hashes without requiring a
@@ -293,6 +296,14 @@ def run(tracks: str = "both", only: tuple[str, ...] = ()) -> int:
             if is_live(adopted):
                 record.update(previous)
             else:
+                if cfg.get("cleanup", {}).get("automatic", False):
+                    from .maintenance import clean_disposable
+                    try:
+                        clean_disposable(apply=True, root=PROJECT_ROOT, owned_supervisor=True)
+                    except Track1Error:
+                        # Another independent project process may own a cache.
+                        # Skip cleanup; the unchanged hard storage gate still applies.
+                        state["cleanup_status"] = "skipped_busy_or_unsafe"
                 require_space(stage.estimate_bytes)
             attempts = int(cfg["supervisor"]["transient_attempts"])
             for attempt in range(attempts):
@@ -317,9 +328,7 @@ def run(tracks: str = "both", only: tuple[str, ...] = ()) -> int:
                         stop_group(record["child"])
                         break
                     require_space()
-                    model_state = STATE_DIR / "model_process.json"
-                    model_identity = read_state(model_state).get("process") if model_state.exists() else None
-                    rss = _memory_usage([record["child"], model_identity])
+                    rss = _memory_usage([record["child"]])
                     if rss > int(cfg["limits"]["memory_gib"]) * 2**30:
                         raise Track1Error("Memory limit reached")
                     state.update({"heartbeat": utc_now(), "memory_bytes": rss})
@@ -337,7 +346,8 @@ def run(tracks: str = "both", only: tuple[str, ...] = ()) -> int:
                 if result.get("retryable") and attempt + 1 < attempts:
                     time.sleep(min(300, float(cfg["supervisor"]["retry_seconds"]) * 2**attempt))
                     continue
-                record.update({"status": "stopped" if stopped else "failed",
+                record.update({"status": "stopped" if stopped else (
+                    "awaiting_codex_review" if result.get("status") == "awaiting_codex_review" else "failed"),
                                "error_category": result.get("error_category", "interrupted")})
                 failed.add(stage.name)
                 break
@@ -350,7 +360,8 @@ def run(tracks: str = "both", only: tuple[str, ...] = ()) -> int:
         state["stages"][stage.name] = record
         state["heartbeat"] = utc_now()
         atomic_write_json(STATE, state)
-    state["status"] = "stopped" if stopped else ("blocked" if failed else "complete")
+    waiting = any(state["stages"].get(name, {}).get("status") == "awaiting_codex_review" for name in selected)
+    state["status"] = "stopped" if stopped else ("awaiting_codex_review" if waiting else ("blocked" if failed else "complete"))
     state["finished_at"] = utc_now()
     atomic_write_json(STATE, state)
     lock.close()

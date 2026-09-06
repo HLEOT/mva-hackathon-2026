@@ -1,7 +1,7 @@
 """Synthetic clinical assertions only: no real patient fixtures in this tree."""
 import pytest
 
-from mva_runner.local import InterpretationError
+from mva_runner.codex_review import InterpretationError
 from mva_runner.review import validate_assertions, validate_selections
 from mva_runner.scientific import alignment_threads
 

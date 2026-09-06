@@ -18,6 +18,7 @@ from .render import inspect_pdf, markdown_to_pdf
 from .storage import EXECUTION, require_space, snapshot
 from .supervisor import read_state
 from .workbooks import write_methods
+from .codex_review import ReviewRequired, terms_confirmed, verify_receipt
 
 OUTPUT = PROJECT_ROOT / 'submissions'
 TRACK1 = PROJECT_ROOT / 'results/private'
@@ -31,14 +32,38 @@ def ai_disclosure() -> tuple[str, list[str]]:
     path = PROJECT_ROOT / 'config/ai_usage.local.yaml'
     data = load_jsonish(path) if path.exists() else {}
     missing = [key for key in ['hosted_plan', 'hosted_data_setting'] if not str(data.get(key, '')).strip()]
-    text = ('OpenAI Codex was used for public code implementation and synthetic tests. '
+    text = ('OpenAI Codex directs the analysis and code work; scientific computation and deterministic validation run on the local PC. '
             f"Account plan/tier: {data.get('hosted_plan', 'NOT YET PROVIDED')}. "
             f"Account data-handling setting: {data.get('hosted_data_setting', 'NOT YET VERIFIED')}. "
-            'This workflow did not send patient phenotype, genotype, or private interpretation prompts to hosted models. '
-            'Private interpretation used Qwen3-30B-A3B Q4_K_M through a pinned local llama.cpp Vulkan runtime, '
-            'with authenticated loopback requests, no fine-tuning, and owner-readable local prompt/response logs. '
-            'These are automated research reviews, not human clinical curation.')
+            'The workflow does not install or invoke a separate inference model or hosted API client. '
+            'Codex reviews are recorded with exact request/response hashes; local execution is not a claim of local Codex inference. '
+            'These are AI-assisted research reviews, not human clinical curation. '
+            'Earlier local-model draft results, if retained, keep their original attribution and are not Codex-reviewed results.')
     return text, missing
+
+
+def assert_codex_reviews() -> None:
+    """Reject legacy drafts before expensive packaging or new disclosure claims."""
+    if not terms_confirmed():
+        raise ReviewRequired('Codex private-review terms have not been confirmed')
+    for purpose, relative in [('phenotype', 'work/private/phenotype_review.json'),
+                              ('finalists', 'work/private/finalist_review.json')]:
+        data = load_jsonish(PROJECT_ROOT / relative)
+        receipt = data.get('codex_review', {})
+        if data.get('review_mode') != 'codex_assisted' or receipt.get('purpose') != purpose:
+            raise ReviewRequired('Existing scientific review predates the Codex-directed workflow')
+        verify_receipt(receipt)
+    track2 = load_jsonish(TRACK1 / 'track2/hypotheses.json')
+    if track2.get('review_mode') != 'codex_assisted_plus_deterministic_gates' or not track2.get('decisions'):
+        raise ReviewRequired('Track 2 requires actual Codex review, not relabelled earlier results')
+    for decision in track2['decisions']:
+        for key, purpose in [('codex_review', 'track2_'), ('codex_critique', 'track2_critique_')]:
+            if key == 'codex_critique' and decision.get('critique') is None:
+                continue
+            receipt = decision.get(key) or {}
+            if receipt.get('purpose') != purpose + decision['drug']:
+                raise ReviewRequired('Track 2 review provenance is incomplete')
+            verify_receipt(receipt)
 
 
 def methods_answers(username: str, disclosure: str, runtime: str, track2: dict) -> dict:
@@ -47,26 +72,26 @@ def methods_answers(username: str, disclosure: str, runtime: str, track2: dict) 
         'are joined by allele and gene. Pinned HPO terms require exact local source anchors; conflicting or uncertain '
         'features are excluded from scoring. Candidate pairs use evidence for both alleles; same-locus and shared-block '
         'cis pairs are excluded. Genome-wide score ordering and the historical known-gene-prioritised comparator are retained. '
-        'Selected hypotheses undergo local automated review, streamed duplicate-marked CRAM alignment, and measured read/phase validation. '
+        'Selected hypotheses undergo Codex review, streamed duplicate-marked CRAM alignment, and measured read/phase validation on the PC. '
         'FastQC/MultiQC screening flags are retained explicitly in both reports; artifact integrity is not an all-module PASS claim.')
     method2 = ('Fixed public queries collect ChEMBL mechanisms, Reactome checkpoint biology, PubMed abstracts, and FDA '
-        'approval/label records before joining private results locally. Structured local-model outputs cite supplied source '
+        'approval/label records before joining private results locally. Structured Codex reviews cite supplied source '
         'IDs and exact quotes. Deterministic gates require supported variant mechanism, compound identity, existing regulatory '
-        'approval, safety evidence and primary literature. A second local critique tests the conditional experimental rationale. '
+        'approval, safety evidence and primary literature. A second Codex critique tests the conditional experimental rationale. '
         'Unknown mechanisms, invented evidence and unsupported candidates are rejected; no list is filled to an arbitrary target.')
     private = 'Only the authorised organiser-provided gated challenge genome and phenotype; no additional proprietary datasets.'
     public = 'GRCh38 reference, VEP merged cache 116, Exomiser 15.1.0/2602, HPO v2026-09-01, ChEMBL, Reactome 97, PubMed and official FDA records. Exact versions, retrieval dates and checksums are recorded locally.'
     return {
         'Track 1 methods': {
             7: username, 8: '1 (local approach identifier; not a claim about platform submission count)', 9: method1,
-            10: disclosure, 11: 'Automated computational output with explicitly recorded local-model and deterministic reviews.',
-            12: 'No downstream human clinical curation. Hosted coding review examined code, synthetic fixtures and sanitised operational summaries only.',
+            10: disclosure, 11: 'Local computational output with explicitly recorded Codex reviews and deterministic validation.',
+            12: 'No downstream human clinical curation. Codex scientific reviews are retained as source-bound request/response records.',
             13: 'Organiser-provided gated challenge data plus public reference resources; no additional proprietary resources.',
             14: public, 15: private, 16: 'Both same-gene heterozygous pairs and eligible single-variant hypotheses. Unresolved phase is not confirmation of compound heterozygosity.',
             17: 'Primary/secondary labels are explicit. Lower-ranked alternatives are not automatically called secondary findings; none is a clinical diagnosis.',
             18: runtime, 19: method1 + ' Strengths are source grounding, explicit uncertainty and resumability. Limitations include no independent whole-genome CNV/SV call, coding/splice-focused Exomiser prioritisation, incomplete non-coding interpretation and absent functional confirmation.'},
         'Track 2 methods': {
-            7: username, 8: method2, 9: disclosure, 10: 'Automated public evidence collection followed by local model synthesis, deterministic checks and local critique.',
+            7: username, 8: method2, 9: disclosure, 10: 'Automated public evidence collection followed by Codex synthesis, local deterministic checks and Codex critique.',
             11: 'No human expert clinical curation was performed. Automated critiques are not independent experimental validation.',
             12: 'Public drug/target and literature resources, joined locally to the authorised gated challenge analysis.', 13: public, 14: private,
             15: 'A predicted loss-of-function category requires a supplied truncating or essential-splice consequence; missense alone does not establish direction. Literature-supported allele mechanisms additionally require exact source quotes matching the supplied HGVS identity, primary functional evidence and local critique of assay controls and interpretation. Unknown mechanism fails retention. No new experimental or independent human validation was performed.',
@@ -116,6 +141,7 @@ def track2_report(data: dict, corpus: dict, output, github: str, disclosure: str
 
 
 def package() -> None:
+    assert_codex_reviews()
     require_space(1_000_000_000)
     cfg = load_jsonish(EXECUTION)
     username = cfg['delivery']['hf_username']

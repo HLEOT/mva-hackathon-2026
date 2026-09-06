@@ -1,6 +1,6 @@
 # MVA Hackathon 2026 — local, resumable two-track workflow
 
-Reproducible, local-only prioritisation of candidate variants for the
+Codex-directed analysis with reproducible scientific computation on your PC for the
 **Rare Disease, Real Kid: MVA Hackathon 2026**. The workflow starts from the
 provided GRCh38 VCF and reviewed HPO terms, ranks plausible
 compound-heterozygous pairs, and uses the raw FASTQs only to validate selected
@@ -10,9 +10,10 @@ This repository contains code and configuration templates only. Gated source
 data, patient-derived intermediates, tokens, and local submission artifacts are
 ignored by Git.
 
-## Model execution plan
+## Codex execution plan
 
-The existing Track 1 workflow is being extended to both hackathon tracks.
+Codex in this conversation performs interpretation; installed scientific tools
+run locally. No separate LLM download, inference server or AI API is required.
 The full implementation and execution contract is in
 [docs/00_execution_plan.md](docs/00_execution_plan.md), including the ordered
 file structure, commenting standard, resource limits, resumable milestones,
@@ -36,6 +37,12 @@ below documents the existing Track 1 interface.
 # Technical state only: no patient-level evidence is printed.
 ./mva status --json
 
+# Handle interpretation in this Codex session; inspect queue IDs only.
+./mva reviews
+
+# Preview safe cleanup; add --apply to remove disposable task files.
+./mva cleanup --compact-resources
+
 # Graceful stop; retain checkpoints and source data.
 ./mva stop
 ```
@@ -48,8 +55,9 @@ or publishing this code does not establish project completion.
 ## Safety boundaries
 
 - Never commit or redistribute challenge data.
-- Never send phenotype text, VCF records, genomic coordinates, or derived
-  patient-level prompts to hosted APIs or LLMs.
+- Before any private evidence enters Codex, confirm the actual account's terms
+  satisfy the organiser's requirements. Until then use code, synthetic fixtures
+  and sanitised status only. Local tool execution does not make Codex inference local.
 - `HF_TOKEN` is read from the process environment or the owner-readable,
   Git-ignored `config/hf_token.local.txt`; it is never logged or copied.
 - Hugging Face Hub and Xet caches are forced under the ignored
@@ -81,7 +89,8 @@ cp config/proband.draft.local.yaml config/proband.local.yaml
 
 # Build the pinned public GRCh38, VEP, and Exomiser resources. This is
 # independent of patient phenotype review and is safely resumable. Keep ample
-# free space for the large Exomiser archives plus their extracted databases.
+# free space for extraction overlap. Verified redundant download archives can
+# subsequently be removed with ./mva cleanup --apply --compact-resources.
 ./mva-track1 prepare-public --cores 32
 
 # Run normalization, offline annotation, Exomiser, and deterministic ranking.

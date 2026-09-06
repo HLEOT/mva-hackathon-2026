@@ -2,7 +2,7 @@
 
 This produces hypotheses for experiments, never treatment instructions. The
 deterministic gates check identity, sources and consequence compatibility; a
-second local critique assesses the proposed causal chain, without pretending
+second Codex critique assesses the proposed causal chain, without pretending
 that two automated opinions constitute independent biological validation.
 """
 from __future__ import annotations
@@ -12,7 +12,7 @@ import io
 import json
 import re
 
-from mva_runner.local import MANIFEST as MODEL_MANIFEST, InterpretationError, infer
+from mva_runner.codex_review import InterpretationError, review_evidence, review_receipt
 from mva_track1.common import PROJECT_ROOT, Track1Error, atomic_write_json, atomic_write_text, load_jsonish, sha256_file, utc_now
 from mva_track1.submission import _candidate_rows, reviewed_finalists
 from .sources import ROOT
@@ -96,7 +96,7 @@ def evidence_index(corpus: dict, drug: str) -> dict:
 def validate_hypothesis(answer: dict, candidates: dict, drug_record: dict, sources: dict) -> list[str]:
     """Return concrete rejection reasons; never repair invented scientific facts."""
     if answer["decision"] != "retain":
-        return ["model_rejected"]
+        return ["review_rejected"]
     failures = []
     candidate = candidates.get(answer["candidate_id"])
     if candidate is None:
@@ -179,14 +179,14 @@ def analyse() -> None:
                 continue
             selected_sources[identifier] = {**record, "text": record["text"][:size], "truncated": size < len(record["text"])}
             remaining_chars -= size
-        answer = infer((PROJECT_ROOT / "prompts/local/track2.md").read_text(), json.dumps({
+        answer = review_evidence((PROJECT_ROOT / "prompts/review/track2.md").read_text(), json.dumps({
             "drug": drug, "approval": drug_record["approval"], "sources": selected_sources,
             "candidates": candidates, "measured_reads": {k: reads[k] for k in candidates},
             "interpretation": "Research hypotheses only; no clinical diagnosis or administration."}), _schema(), "track2_" + drug)
         failures = validate_hypothesis(answer, candidates, drug_record, selected_sources)
         critique = None
         if not failures:
-            critique = infer("Critique this research-only repurposing chain against the supplied evidence. /no_think\n"
+            critique = review_evidence("Critique this research-only repurposing chain against the supplied evidence.\n"
                 "Reject unsupported mechanism direction, cytotoxicity misrepresented as rescue, or safety claims. "
                 "For functional claims, verify that the cited assay actually measures the stated gain, loss or dominant-negative effect "
                 "of the supplied allele, and assess transcript/isoform equivalence, assay controls and opposing results. "
@@ -195,9 +195,11 @@ def analyse() -> None:
                 {"type": "object", "properties": {"defensible_for_experiment": {"type": "boolean"}, "reason": {"type": "string"}},
                  "required": ["defensible_for_experiment", "reason"], "additionalProperties": False}, "track2_critique_" + drug)
             if not critique["defensible_for_experiment"]:
-                failures.append("local_critique_rejected")
+                failures.append("codex_critique_rejected")
         decision = {"drug": drug, **answer, "validation_failures": failures, "critique": critique,
-                    "accepted_as_experimental_hypothesis": not failures, "approval": drug_record["approval"]}
+                    "accepted_as_experimental_hypothesis": not failures, "approval": drug_record["approval"],
+                    "codex_review": review_receipt("track2_" + drug),
+                    "codex_critique": review_receipt("track2_critique_" + drug) if critique is not None else None}
         decisions.append(decision)
         if not failures:
             retained.append(decision)
@@ -206,8 +208,8 @@ def analyse() -> None:
             rows.append({"drug": drug, "candidate_id": answer["candidate_id"], "accepted": not failures,
                 **claim, "url": source.get("url", ""), "quote_verified": bool(source and claim["quote"] in source["text"])})
     RESULTS.mkdir(parents=True, exist_ok=True)
-    output = {"created_at": utc_now(), "review_mode": "automated_local_plus_deterministic_gates",
-              "model_manifest_sha256": sha256_file(MODEL_MANIFEST), "public_manifest_sha256": sha256_file(ROOT / "manifest.json"),
+    output = {"created_at": utc_now(), "review_mode": "codex_assisted_plus_deterministic_gates",
+              "public_manifest_sha256": sha256_file(ROOT / "manifest.json"),
               "hypotheses": retained[:int(cfg["policy"]["maximum_hypotheses"])], "decisions": decisions,
               "conclusion": "Experimental hypotheses only; no validated therapy." if retained else
                   "No sufficiently supported variant-mechanism-linked repurposing hypothesis passed the declared gates.",

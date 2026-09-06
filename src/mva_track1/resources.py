@@ -377,8 +377,16 @@ def verify_exomiser_install(
     downloads = root / "downloads"
     if any(downloads.glob("*.part")):
         raise Track1Error("Exomiser partial archive remains")
+    compacted = (root / "archive_compaction.json").is_file()
+    if compacted:
+        from mva_runner.maintenance import verify_installed_payload
+        verify_installed_payload(root, check_hashes=check_hashes)
     for record in archives:
         archive = downloads / record["file"]
+        if compacted and not archive.exists():
+            # The installed-file hashes replace redundant download storage,
+            # not scientific integrity. Original archive URLs/digests remain.
+            continue
         if not _nonempty_file(archive) or archive.stat().st_size != int(record.get("size", -1)):
             raise Track1Error(f"Exomiser archive size mismatch: {archive.name}")
         if not _SHA256_RE.fullmatch(str(record.get("sha256", ""))):
@@ -499,6 +507,16 @@ def install_exomiser(config_path: Path | str = DEFAULT_CONFIG) -> Path:
                 "size": archive.stat().st_size,
             }
         )
+    # A genuine reinstall supersedes the compacted installation, not its
+    # history. Keeping an active receipt bound to the old manifest would make
+    # the repaired install fail verification forever. Archive only small
+    # receipts; never duplicate the downloaded databases.
+    for name in ("archive_compaction.json", "installed_payload.json"):
+        old = root / name
+        if old.is_file():
+            history = root / "compaction_history"
+            history.mkdir(exist_ok=True)
+            old.replace(history / (sha256_file(old) + "_" + name))
     atomic_write_json(
         root / "install_manifest.json",
         {"installed_at": utc_now(), "version": version, "data_version": data_version, "archives": records},
