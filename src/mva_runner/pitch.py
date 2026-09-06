@@ -19,7 +19,7 @@ from reportlab.pdfgen.canvas import Canvas
 
 from mva_track1.common import PROJECT_ROOT, Track1Error, atomic_write_json, atomic_write_text
 from mva_track1.report import ACKNOWLEDGEMENT
-from .render import inspect_pdf, register_fonts
+from .render import inspect_pdf, register_fonts, rendered_pdf_pages
 from .speech import BINARY, prepare as prepare_speech
 
 FFMPEG = PROJECT_ROOT / '.conda/delivery/bin/ffmpeg'
@@ -119,7 +119,9 @@ def build_pitch(directory: Path, slides: list[dict], max_seconds: float = 180) -
         raise Track1Error('Project-local FFmpeg delivery environment is not installed')
     pdf = directory / 'pitch_slides.pdf'
     rendering = render_slides(slides, pdf)
-    frames = sorted((directory / 'pitch_slides_render').glob('page-*.png'))
+    # The renderer retains old previews in separate hash-named directories.
+    # Consume only this PDF's verified page set, with one frame per narration.
+    frames = rendered_pdf_pages(pdf, len(slides))
     durations = []
     speed = 155
     for attempt in range(3):
@@ -146,7 +148,7 @@ def build_pitch(directory: Path, slides: list[dict], max_seconds: float = 180) -
         raise Track1Error('Narration does not fit the permitted pitch duration')
     segments = []
     timeline, elapsed = [], 0.0
-    for index, (slide, frame, duration) in enumerate(zip(slides, frames, durations), 1):
+    for index, (slide, frame, duration) in enumerate(zip(slides, frames, durations, strict=True), 1):
         segment = directory / f'segment_{index:02d}.mp4'
         subprocess.run([str(FFMPEG), '-nostdin', '-y', '-v', 'error', '-loop', '1', '-i', str(frame),
             '-i', str(directory / f'slide_{index:02d}.wav'), '-af', 'apad', '-t', f'{duration:.3f}',

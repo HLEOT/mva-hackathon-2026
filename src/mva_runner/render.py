@@ -77,6 +77,33 @@ def markdown_to_pdf(markdown: Path, pdf: Path) -> None:
                       topMargin=17 * mm, bottomMargin=21 * mm).build(story, onFirstPage=footer, onLaterPages=footer)
 
 
+def pdf_preview_directory(pdf: Path) -> Path:
+    """Keep one canonical, content-addressed location for a PDF's raster pages."""
+    return pdf.parent / (pdf.stem + '_render') / sha256_file(pdf)[:16]
+
+
+def rendered_pdf_pages(pdf: Path, expected_pages: int) -> list[Path]:
+    """Return exactly the current PDF's pages in numeric narration order.
+
+    Never borrow pages from an older PDF or let zip silently omit slides when
+    a render is missing. Padded and unpadded page numbers must not alias.
+    """
+    if expected_pages < 1:
+        raise Track1Error('A rendered PDF must have at least one expected page')
+    pages = {}
+    for path in pdf_preview_directory(pdf).glob('page-*.png'):
+        match = re.fullmatch(r'page-([0-9]+)\.png', path.name)
+        if not match or path.is_symlink() or not path.is_file():
+            raise Track1Error('Rendered PDF has an invalid raster page')
+        number = int(match.group(1))
+        if number in pages:
+            raise Track1Error('Rendered PDF has duplicate raster page numbers')
+        pages[number] = path
+    if set(pages) != set(range(1, expected_pages + 1)):
+        raise Track1Error('PDF raster inventory does not match the expected pages')
+    return [pages[number] for number in range(1, expected_pages + 1)]
+
+
 def inspect_pdf(pdf: Path, expected_pages: int | None = None) -> dict:
     """Inspect rendered text geometry locally; return no document text to callers.
 
@@ -104,13 +131,11 @@ def inspect_pdf(pdf: Path, expected_pages: int | None = None) -> dict:
     from PIL import Image, ImageStat
     # Content-addressed previews cannot inherit stale pages when a revised
     # report is shorter. Retain prior inspection evidence instead of deleting it.
-    preview = pdf.parent / (pdf.stem + '_render') / sha256_file(pdf)[:16]
+    preview = pdf_preview_directory(pdf)
     preview.mkdir(parents=True, exist_ok=True)
     subprocess.run(['pdftoppm', '-scale-to', '1280', '-png', str(pdf), str(preview / 'page')],
                    check=True, capture_output=True)
-    images = sorted(preview.glob('page-*.png'))
-    if len(images) != len(pages):
-        raise Track1Error('PDF raster inspection did not render every page')
+    images = rendered_pdf_pages(pdf, len(pages))
     for image in images:
         with Image.open(image) as opened:
             if ImageStat.Stat(opened.convert('L')).var[0] < 5:
