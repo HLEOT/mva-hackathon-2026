@@ -168,14 +168,19 @@ Do not retain another giant backup of a reproducibly downloadable archive.
   offline and final scientific provenance needs refresh for the changed code.
   The original 45-entry staged index remains byte-identical. Public release
   verification and isolated reproduction are recorded under work/private/runner.
+- Code release `7525ce6` was verified against all 111 audited files and modes;
+  all 295 tests and the dependency check passed in the isolated Python checkout.
+  Later documentation-only checkpoints retain the same tested implementation;
+  use the private release receipts for the exact current public commit.
 - Current scientific outputs must not be relabelled or packaged as Codex-reviewed.
   New review gates require actual responses and confirmed data-use terms. Dataset
   citation and final methods disclosures still require truthful confirmation.
 
-**Exact next action:** finish verifying this architecture/cleanup change and the
-audited code release. Do not restart historical alignment, watcher or recovery
-jobs. The user's earlier execution goal is paused; this cleanup does not resume
-the full analysis. When execution is resumed and provider terms are confirmed,
+**Exact next action:** the architecture change and storage cleanup are complete.
+Keep the earlier execution goal paused; this cleanup does not resume the full
+analysis. Do not restart historical alignment, watcher or recovery jobs. Before
+new private interpretation, obtain actual provider-terms confirmation. When
+execution is resumed and those terms are confirmed,
 use `./mva run --tracks both --resume`, handle `./mva reviews` in this Codex
 session, preserve all previous attribution, and refresh only affected science
 and delivery dependencies. Never fabricate checkpoints to conceal stale results.
