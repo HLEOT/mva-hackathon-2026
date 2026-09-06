@@ -50,6 +50,21 @@ def _runtime_env() -> dict:
     return env
 
 
+def _record_install_manifest(model: dict, runtime: dict) -> None:
+    """Do not turn re-verification into a new model/inference-cache identity.
+
+    Call only after the model and runtime checksums and GPU probe pass. A new
+    verification time is not a new installation: changing created_at alone
+    would needlessly invalidate private interpretation and downstream stages.
+    """
+    identity = {"model": model, "runtime": runtime}
+    if MANIFEST.exists():
+        previous = load_jsonish(MANIFEST)
+        if previous.get("created_at") and all(previous.get(key) == value for key, value in identity.items()):
+            return
+    atomic_write_json(MANIFEST, {**identity, "created_at": utc_now()}, mode=0o644)
+
+
 def prepare() -> None:
     """Verify the small GPU runtime first, then fetch the single model file."""
     cfg = load_jsonish(EXECUTION)["model"]
@@ -89,10 +104,9 @@ def prepare() -> None:
         _download(f"https://huggingface.co/{source['repository']}/resolve/{source['revision']}/{source['filename']}", model)
     if model.stat().st_size != source["size"] or sha256_file(model) != source["sha256"]:
         raise Track1Error("Local model size/checksum mismatch")
-    atomic_write_json(MANIFEST, {"model": source, "runtime": {
+    _record_install_manifest(source, {
         "release": cfg["runtime_release"], "archive_sha256": cfg["runtime_sha256"],
-        "binary_sha256": sha256_file(binary), "backend": "Vulkan", "gpu_detected": True},
-        "created_at": utc_now()}, mode=0o644)
+        "binary_sha256": sha256_file(binary), "backend": "Vulkan", "gpu_detected": True})
     start()
     answer = infer("Return the requested JSON object. /no_think", "Return healthy=true.",
                    {"type":"object", "properties":{"healthy":{"type":"boolean"}},
