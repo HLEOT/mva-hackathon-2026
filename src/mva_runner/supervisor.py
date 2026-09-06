@@ -120,7 +120,22 @@ def checkpoint_valid(stage: Stage, record: dict, expected: str, root: Path | Non
     if record.get("status") != "complete" or record.get("fingerprint") != expected:
         return False
     saved = record.get("outputs", {})
-    return all((root / p).is_file() and saved.get(p) == file_record(root / p) for p in stage.outputs)
+    for name in stage.outputs:
+        path = root / name
+        if not path.is_file() or not isinstance(saved.get(name), dict):
+            return False
+        current, previous = file_record(path), saved[name]
+        if "sha256" in current:
+            # A downstream workflow can reproduce a small table byte-for-byte.
+            # Rehash it, but do not mistake a new mtime for new evidence. Keep
+            # the saved parent identity intact; no checkpoint is rewritten here.
+            if any(previous.get(key) != current[key] for key in ("size", "sha256")):
+                return False
+        elif previous != current:
+            # Large files retain the strict metadata gate. Final packaging
+            # independently hashes them in full before accepting the bundle.
+            return False
+    return True
 
 
 def process_identity(pid: int) -> dict | None:

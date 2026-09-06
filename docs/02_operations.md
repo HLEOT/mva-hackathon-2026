@@ -134,6 +134,14 @@ Do not suppress rerun triggers or manufacture completion markers simply to
 reuse them. Full packaging rechecks large-file checksums; ordinary status
 checks use the lighter recorded metadata where documented.
 
+For completed stage outputs up to 8 MiB, checkpoint recovery freshly compares
+size and SHA-256. A downstream rule can reproduce identical bytes with a new
+mtime; that alone is not new scientific evidence and must not restart the
+upstream review chain. Saved parent records remain unchanged. Large outputs
+retain strict metadata checks and full final-delivery hashing. Changed input
+fingerprints still invalidate their stages. A disclosure-only resume should
+reuse the completed analysis rather than repeat phasing.
+
 The existing BWA index has a dedicated original environment definition. Do not
 replace `workflow/envs/bwa_index.yaml` with the broader current read environment
 merely to add parser or QC dependencies: this can trigger reindexing, and the
@@ -162,6 +170,15 @@ Missing, stale or duplicate pages fail before video assembly. Check the actual
 bundle's full decode and duration, not only the separate synthetic smoke test.
 Re-verifying an unchanged local model preserves its installation identity after
 the full checksum and GPU gates; timestamps alone must not create a new model.
+
+The real bundle passed independent artifact checks at 01:03 UTC on 2026-09-06,
+including full scientific hashes and strict decoding of the 138.129313-second
+MP4. Its status remains `draft_missing_disclosure` until the hosted account plan
+and data-sharing setting are confirmed in config/ai_usage.local.yaml. The formal
+dataset citation also needs organiser confirmation. Preserve the checked draft
+and its receipts; do not retry unchanged packaging or invent disclosure values.
+Recheck the current audit and code-release receipts before treating this dated
+snapshot as current acceptance.
 
 ## Verification and publication
 

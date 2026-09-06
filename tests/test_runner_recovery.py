@@ -105,6 +105,58 @@ def test_report_code_changes_refresh_provenance_without_realigning(tmp_path):
     assert "provenance" in stages["package"].dependencies
 
 
+def _completed_output_checkpoint(root, raw=b"invented scientific table\n"):
+    output = root / "result.txt"
+    output.write_bytes(raw)
+    stage = supervisor.Stage("synthetic", (), (), ("result.txt",))
+    record = {"status": "complete", "fingerprint": supervisor.fingerprint(stage, {}, root),
+              "outputs": {"result.txt": supervisor.file_record(output)}}
+    return stage, record, output
+
+
+def test_byte_identical_small_output_reuses_checkpoint_without_mutating_it(tmp_path):
+    stage, record, output = _completed_output_checkpoint(tmp_path)
+    before = json.dumps(record, sort_keys=True)
+    stat = output.stat()
+    supervisor.os.utime(output, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+    assert supervisor.checkpoint_valid(stage, record, record["fingerprint"], tmp_path)
+    assert json.dumps(record, sort_keys=True) == before
+
+
+def test_changed_small_output_fails_even_with_restored_size_and_mtime(tmp_path):
+    stage, record, output = _completed_output_checkpoint(tmp_path)
+    stat = output.stat()
+    output.write_bytes(b"X" * stat.st_size)
+    supervisor.os.utime(output, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    assert not supervisor.checkpoint_valid(stage, record, record["fingerprint"], tmp_path)
+
+
+def test_unhashed_large_output_retains_strict_mtime_gate(tmp_path):
+    stage, record, output = _completed_output_checkpoint(tmp_path, b"X" * (8 * 1024 * 1024 + 1))
+    assert "sha256" not in record["outputs"]["result.txt"]
+    stat = output.stat()
+    supervisor.os.utime(output, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+    assert not supervisor.checkpoint_valid(stage, record, record["fingerprint"], tmp_path)
+
+
+def test_missing_saved_small_output_hash_is_not_verified(tmp_path):
+    stage, record, _ = _completed_output_checkpoint(tmp_path)
+    del record["outputs"]["result.txt"]["sha256"]
+    assert not supervisor.checkpoint_valid(stage, record, record["fingerprint"], tmp_path)
+
+
+def test_resume_skips_byte_identical_output_without_launching_worker(isolated_runner, monkeypatch):
+    root, state_dir = isolated_runner
+    stage, record, output = _completed_output_checkpoint(root)
+    stat = output.stat()
+    supervisor.os.utime(output, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+    monkeypatch.setattr(supervisor, "stages", lambda tracks: [stage])
+    supervisor.atomic_write_json(state_dir / "state.json", {"stages": {"synthetic": record}})
+    monkeypatch.setattr(supervisor.subprocess, "Popen", lambda *args, **kwargs: pytest.fail("unchanged stage relaunched"))
+    assert supervisor.run() == 0
+    assert supervisor.read_state()["stages"]["synthetic"] == record
+
+
 def test_duplicate_supervisor_cannot_acquire_project_lock(isolated_runner):
     _, state_dir = isolated_runner
     with (state_dir / "run.lock").open("a+") as lock:
