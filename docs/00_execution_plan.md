@@ -181,6 +181,15 @@ Do not retain another giant backup of a reproducibly downloadable archive.
   baseline. The remaining private-review prerequisite is factual confirmation
   of the Codex account's applicable provider terms; repeated compute cannot
   supply that information. See work/private/runner/codex_goal_resumption_audit.json.
+- The user has now supplied account/settings information and explicitly authorised
+  private review; the facts are recorded only in ignored local configuration.
+  Provider-side retention has no supplied duration, permitted-use terms or
+  session-coverage details yet. Keep `provider_terms_confirmed: false` until those
+  details establish compliance; do not ask again for already supplied consent.
+- The user confirmed a policy-mandated manual conversation deletion deadline of
+  2026-11-23 (30 days after 2026-10-24), replacing the earlier 180-day request.
+  Record this as a user commitment, not completed deletion or provider-retention
+  verification. No automatic local or conversation deletion has been scheduled.
 
 **Exact next action:** the architecture change and storage cleanup are complete.
 Respect the actual goal status: when active, continue safe independent work;
