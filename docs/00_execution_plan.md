@@ -175,12 +175,18 @@ Do not retain another giant backup of a reproducibly downloadable archive.
 - Current scientific outputs must not be relabelled or packaged as Codex-reviewed.
   New review gates require actual responses and confirmed data-use terms. Dataset
   citation and final methods disclosures still require truthful confirmation.
+- On goal resumption, live preflight verified authorised dataset access, the
+  public code destination and all base scientific resources. No scientific
+  worker remains live. Storage is approximately 43.5 GB above the unchanged
+  baseline. The remaining private-review prerequisite is factual confirmation
+  of the Codex account's applicable provider terms; repeated compute cannot
+  supply that information. See work/private/runner/codex_goal_resumption_audit.json.
 
 **Exact next action:** the architecture change and storage cleanup are complete.
-Keep the earlier execution goal paused; this cleanup does not resume the full
-analysis. Do not restart historical alignment, watcher or recovery jobs. Before
-new private interpretation, obtain actual provider-terms confirmation. When
-execution is resumed and those terms are confirmed,
+Respect the actual goal status: when active, continue safe independent work;
+when paused, do not resume the full analysis. Do not restart historical alignment,
+watcher or recovery jobs. Before new private interpretation, obtain actual
+provider-terms confirmation. Once execution is active and those terms are confirmed,
 use `./mva run --tracks both --resume`, handle `./mva reviews` in this Codex
 session, preserve all previous attribution, and refresh only affected science
 and delivery dependencies. Never fabricate checkpoints to conceal stale results.
